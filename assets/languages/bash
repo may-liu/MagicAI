@@ -1,0 +1,161 @@
+{
+    "name": "Bash",
+    "version": "1.0.0",
+    "fileTypes": [
+        "sh",
+        "bash"
+    ],
+    "scopeName": "source.shell.bash",
+    "foldingStartMarker": "\\b(function|if|case|for|while)\\b.*\\{\\s*$|^\\s*\\S+\\s*\\$\\$\\s*\\{?",
+    "foldingStopMarker": "^\\s*\\}",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#functions"
+        },
+        {
+            "include": "#variables"
+        },
+        {
+            "include": "#control-keywords"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#command-substitution"
+        },
+        {
+            "include": "#heredoc"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.hash.shell",
+                    "match": "#.*$"
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "name": "meta.function.shell",
+                    "match": "\\b(function)\\s+([\\w-]+)\\b|^\\s*([\\w-]+)\\s*\\$\\$"
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
+                {
+                    "name": "variable.other.shell",
+                    "match": "\\$([A-Za-z_][A-Za-z0-9_]*|[@*#?$!-])"
+                },
+                {
+                    "name": "variable.other.bracket.shell",
+                    "match": "\\$\\{[^}]+\\}"
+                }
+            ]
+        },
+        "control-keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.shell",
+                    "match": "\\b(if|then|else|elif|fi|case|esac|for|in|while|do|done|select|until|break|continue|return)\\b"
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.pipe.shell",
+                    "match": "\\|"
+                },
+                {
+                    "name": "keyword.operator.redirect.shell",
+                    "match": ">|<|>>|>&|\\d*>&\\d*|\\d*<&\\d*"
+                },
+                {
+                    "name": "keyword.operator.logical.shell",
+                    "match": "&&|\\|\\|"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.shell",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "include": "#variables"
+                        },
+                        {
+                            "include": "#command-substitution"
+                        },
+                        {
+                            "name": "constant.character.escape.shell",
+                            "match": "\\\\$$\"$`\\\\$$"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.shell",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.shell",
+                            "match": "\\\\'"
+                        }
+                    ]
+                }
+            ]
+        },
+        "command-substitution": {
+            "patterns": [
+                {
+                    "name": "meta.command-substitution.shell",
+                    "begin": "\\$\\$",
+                    "end": "\\$",
+                    "patterns": [
+                        {
+                            "include": "$self"
+                        }
+                    ]
+                },
+                {
+                    "name": "meta.command-substitution.backticks.shell",
+                    "begin": "`",
+                    "end": "`",
+                    "patterns": [
+                        {
+                            "include": "#command-substitution"
+                        }
+                    ]
+                }
+            ]
+        },
+        "heredoc": {
+            "patterns": [
+                {
+                    "name": "meta.heredoc.shell",
+                    "begin": "<<-?\\s*([\\'\\\"]?)([A-Za-z_][A-Za-z0-9_]*)\\1",
+                    "end": "^\\s*\\2\\b",
+                    "captures": {
+                        "2": {
+                            "name": "entity.name.tag.heredoc.shell"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
