@@ -146,18 +146,12 @@ class ThemeConfigItem extends ConfigItem {
     this.onThemeChanged,
   }) : _isDarkMode = isDarkMode;
 
-  bool get isDarkMode => _isDarkMode;
-
-  set isDarkMode(bool value) {
-    if (_isDarkMode != value) {
-      _isDarkMode = value;
-      notifyListeners();
-    }
-  }
-
+  bool get isDarkMode => _isDarkMode; // 提供Getter
   @override
   void updateSwitchValue(bool newValue) {
+    if (_isDarkMode == newValue) return;
     _isDarkMode = newValue; // 更新自身状态
+    super.updateSwitchValue(newValue); // 触发通知监听者
     onThemeChanged?.call(newValue); // 调用回调通知父组件
   }
 }
