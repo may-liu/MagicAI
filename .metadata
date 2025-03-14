@@ -13,19 +13,11 @@ project_type: app
 migration:
   platforms:
     - platform: root
-<<<<<<< Updated upstream
       create_revision: 35c388afb57ef061d06a39b537336c87e0e3d1b1
       base_revision: 35c388afb57ef061d06a39b537336c87e0e3d1b1
     - platform: windows
       create_revision: 35c388afb57ef061d06a39b537336c87e0e3d1b1
       base_revision: 35c388afb57ef061d06a39b537336c87e0e3d1b1
-=======
-      create_revision: 09de023485e95e6d1225c2baa44b8feb85e0d45f
-      base_revision: 09de023485e95e6d1225c2baa44b8feb85e0d45f
-    - platform: macos
-      create_revision: 09de023485e95e6d1225c2baa44b8feb85e0d45f
-      base_revision: 09de023485e95e6d1225c2baa44b8feb85e0d45f
->>>>>>> Stashed changes
 
   # User provided section
 
@@ -34,5 +26,5 @@ migration:
   #
   # Files that are not part of the templates will be ignored by default.
   unmanaged_files:
-    - 'lib/main.dart'
-    - 'ios/Runner.xcodeproj/project.pbxproj'
+    - "lib/main.dart"
+    - "ios/Runner.xcodeproj/project.pbxproj"
