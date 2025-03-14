@@ -85,9 +85,8 @@ class _SettingsStateList extends State<SettingsStateList> {
 
   Widget? _buildTrailing(ConfigItem item, ThemeData theme, bool isIOS) {
     if (item is SwitchConfigItem) {
-      final switchState = Provider.of<SwitchConfigItem>(context);
       return Switch.adaptive(
-        value: switchState.value,
+        value: item.value,
         onChanged: item.onChanged,
         activeColor: isIOS ? theme.colorScheme.primary : null,
       );
@@ -101,11 +100,7 @@ class _SettingsStateList extends State<SettingsStateList> {
         child: Switch.adaptive(
           key: ValueKey(item.isDarkMode),
           value: item.isDarkMode,
-          onChanged: (value) {
-            setState(() {
-              item.onThemeChanged!(value);
-            });
-          },
+          onChanged: (value) => item.onThemeChanged!(value),
           activeColor: isIOS ? theme.colorScheme.primary : null,
         ),
       );

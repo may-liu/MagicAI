@@ -23,11 +23,36 @@ void main() async {
 class MagicAIApp extends StatefulWidget {
   const MagicAIApp({super.key});
   @override
-  State<MagicAIApp> createState() => _SettingsAppState();
+  State<MagicAIApp> createState() => _MagicAIAppState();
 }
 
-class _SettingsAppState extends State<MagicAIApp> {
+class _MagicAIAppState extends State<MagicAIApp> {
   bool _isDarkMode = true;
+  bool _testvalue = false;
+  late List<ConfigItem> settingsItems;
+
+  @override
+  void initState() {
+    settingsItems = [
+      SectionHeaderItem(title: '外观设置'),
+      ThemeConfigItem(
+        title: '深色模式',
+        icon: Icons.dark_mode_outlined,
+        isDarkMode: _isDarkMode,
+        onThemeChanged: (value) => setState(() => _isDarkMode = value),
+      ),
+      SectionHeaderItem(title: "模型配置"),
+      SwitchConfigItem(
+        title: "switch 测试",
+        icon: Icons.abc,
+        value: _testvalue,
+        onChanged: (v) => setState(() => _testvalue = v),
+      ),
+      // 添加更多配置项...
+    ];
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -47,45 +72,21 @@ class _SettingsAppState extends State<MagicAIApp> {
         ),
         useMaterial3: true,
       ),
-      home: AdaptiveHomePage(
-        isDarkMode: _isDarkMode,
-        onThemeChanged: (value) => setState(() => _isDarkMode = value),
-      ),
+      home: AdaptiveHomePage(settingsItems: settingsItems),
     );
   }
 }
 
 class AdaptiveHomePage extends StatefulWidget {
-  final bool isDarkMode;
-  final ValueChanged<bool> onThemeChanged;
+  final settingsItems;
 
-  const AdaptiveHomePage({
-    super.key,
-    required this.isDarkMode,
-    required this.onThemeChanged,
-  });
+  AdaptiveHomePage({super.key, required this.settingsItems});
 
   @override
   State<AdaptiveHomePage> createState() => _AdaptiveHomePageState();
 }
 
 class _AdaptiveHomePageState extends State<AdaptiveHomePage> {
-  late List<ConfigItem> settingsItems;
-  @override
-  void initState() {
-    settingsItems = [
-      SectionHeaderItem(title: '外观设置'),
-      ThemeConfigItem(
-        title: '深色模式',
-        icon: Icons.dark_mode_outlined,
-        isDarkMode: widget.isDarkMode,
-        onThemeChanged: widget.onThemeChanged,
-      ),
-      // 添加更多配置项...
-    ];
-    super.initState();
-  }
-
   bool get isDesktop {
     if (kIsWeb) return true;
     return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
@@ -97,8 +98,8 @@ class _AdaptiveHomePageState extends State<AdaptiveHomePage> {
     final useDesktopLayout = isDesktop || screenWidth >= 600;
 
     return useDesktopLayout
-        ? DesktopLayout(settingsItems: settingsItems)
-        : MobileLayout(settingsItems: settingsItems);
+        ? DesktopLayout(settingsItems: widget.settingsItems)
+        : MobileLayout(settingsItems: widget.settingsItems);
   }
 }
 

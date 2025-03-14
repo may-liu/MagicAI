@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen>
   bool _shouldAutoScroll = true;
   ButtonState _sendingButtonState = ButtonState.initial;
 
-  bool _isChatMode = false;
+  final bool _isChatMode = false;
 
   final ValueNotifier<List<ChatMessage>> _messagestNotifier = ValueNotifier([]);
   final TextEditingController _textController = TextEditingController();

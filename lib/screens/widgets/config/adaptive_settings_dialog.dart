@@ -4,8 +4,6 @@ import 'package:magicai/screens/widgets/config/config_statement_core.dart';
 import 'config_core.dart';
 import 'config_item.dart';
 
-import 'package:flutter/foundation.dart';
-
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -62,9 +60,22 @@ class SettingsPage extends StatelessWidget {
 }
 
 // 自适应的设置对话框
-class AdaptiveSettingsDialog extends StatelessWidget {
+class AdaptiveSettingsDialog extends StatefulWidget {
   final List<ConfigItem> items;
   const AdaptiveSettingsDialog({super.key, required this.items});
+
+  @override
+  State<StatefulWidget> createState() => _AdaptiveSettingsDialogState();
+}
+
+class _AdaptiveSettingsDialogState extends State<AdaptiveSettingsDialog> {
+  bool _isDesktopPlatform(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    return platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = _isDesktopPlatform(context);
@@ -73,23 +84,22 @@ class AdaptiveSettingsDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.all(20),
       child:
           isDesktop
-              ? _DesktopSettingsPanel(items: items)
-              : _MobileSettingsPanel(items: items),
+              ? _DesktopSettingsPanel(items: widget.items)
+              : _MobileSettingsPanel(items: widget.items),
     );
-  }
-
-  bool _isDesktopPlatform(BuildContext context) {
-    final platform = Theme.of(context).platform;
-    return platform == TargetPlatform.windows ||
-        platform == TargetPlatform.macOS ||
-        platform == TargetPlatform.linux;
   }
 }
 
 // 移动端面板
-class _MobileSettingsPanel extends StatelessWidget {
+class _MobileSettingsPanel extends StatefulWidget {
   final List<ConfigItem> items;
   const _MobileSettingsPanel({required this.items});
+
+  @override
+  State<StatefulWidget> createState() => __MobileSettingsPanelState();
+}
+
+class __MobileSettingsPanelState extends State<_MobileSettingsPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -108,7 +118,7 @@ class _MobileSettingsPanel extends StatelessWidget {
               ),
             ],
           ),
-          Expanded(child: SettingsStateList(items: items)),
+          Expanded(child: SettingsStateList(items: widget.items)),
         ],
       ),
     );
@@ -116,9 +126,15 @@ class _MobileSettingsPanel extends StatelessWidget {
 }
 
 // 桌面端面板
-class _DesktopSettingsPanel extends StatelessWidget {
+class _DesktopSettingsPanel extends StatefulWidget {
   final List<ConfigItem> items;
   const _DesktopSettingsPanel({required this.items});
+
+  @override
+  State<StatefulWidget> createState() => __DesktopSettingsPanelState();
+}
+
+class __DesktopSettingsPanelState extends State<_DesktopSettingsPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -132,7 +148,7 @@ class _DesktopSettingsPanel extends StatelessWidget {
       child: Column(
         children: [
           _buildTitleBar(context),
-          Expanded(child: SettingsStateList(items: items)),
+          Expanded(child: SettingsStateList(items: widget.items)),
         ],
       ),
     );
@@ -161,90 +177,32 @@ class _DesktopSettingsPanel extends StatelessWidget {
   }
 }
 
-// // 核心设置列表组件
-// class SettingsList extends StatelessWidget {
-//   final List<dynamic> items;
-//   final ScrollController? scrollController;
-//   const SettingsList({super.key, required this.items, this.scrollController});
-//   @override
-//   Widget build(BuildContext context) {
-//     return ListView.builder(
-//       controller: scrollController,
-//       itemCount: items.length,
-//       itemBuilder:
-//           (context, index) => _SettingsListItem(
-//             item: items[index],
-//             isDesktop: _isDesktopPlatform(context),
-//           ),
-//     );
-//   }
-
-//   bool _isDesktopPlatform(BuildContext context) {
-//     final platform = Theme.of(context).platform;
-//     return platform == TargetPlatform.windows ||
-//         platform == TargetPlatform.macOS ||
-//         platform == TargetPlatform.linux;
-//   }
-// }
-
-// // 列表项组件
-// class _SettingsListItem extends StatelessWidget {
-//   final ConfigItem item;
-//   final bool isDesktop;
-//   const _SettingsListItem({required this.item, required this.isDesktop});
-//   @override
-//   Widget build(BuildContext context) {
-//     final theme = Theme.of(context);
-
-//     return MergeSemantics(
-//       child: ListTile(
-//         leading: _buildLeading(theme),
-//         title: Text(item.title),
-//         subtitle: item.subtitle != null ? Text(item.subtitle!) : null,
-//         trailing: _buildTrailing(theme),
-//         // onTap: item.onTap,
-//         tileColor: _getTileColor(theme),
-//         shape: _getTileShape(),
-//       ),
-//     );
-//   }
-
-//   Widget _buildLeading(ThemeData theme) {
-//     return Icon(item.icon, color: item.iconColor ?? theme.colorScheme.primary);
-//   }
-
-//   Widget _buildTrailing(ThemeData theme) {
-//     if (item is SwitchConfigItem) {
-//       final switchItem = item as SwitchConfigItem;
-//       return Switch(value: switchItem.value, onChanged: switchItem.onChanged);
-//     }
-//     return const SizedBox.shrink();
-//   }
-
-//   Color? _getTileColor(ThemeData theme) {
-//     return isDesktop ? theme.colorScheme.surface : null;
-//   }
-
-//   ShapeBorder? _getTileShape() {
-//     return isDesktop
-//         ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-//         : null;
-//   }
-// }
-
 void showSettings(BuildContext context, List<ConfigItem> settingsItems) {
-  if (Theme.of(context).platform == TargetPlatform.iOS ||
-      Theme.of(context).platform == TargetPlatform.android) {
-    Navigator.push(
+  Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SettingsPage(items: settingsItems),
       ),
     );
-  } else {
-    showDialog(
-      context: context,
-      builder: (context) => AdaptiveSettingsDialog(items: settingsItems),
-    );
-  }
+  // if (Theme.of(context).platform == TargetPlatform.iOS ||
+  //     Theme.of(context).platform == TargetPlatform.android) {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => SettingsPage(items: settingsItems),
+  //     ),
+  //   );
+  // } else {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return StatefulBuilder(
+  //         builder: (context, setState) {
+  //           return AdaptiveSettingsDialog(items: settingsItems);
+  //         },
+  //       );
+  //     },
+  //     // (context) => AdaptiveSettingsDialog(items: settingsItems),
+  //   );
+  // }
 }
