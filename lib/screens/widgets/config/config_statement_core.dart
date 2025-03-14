@@ -10,7 +10,7 @@ class SettingsStateList extends StatefulWidget {
   final Color? dividerColor;
 
   @override
-  State<SettingsStateList> createState() => _SettingsStateList();
+  State<SettingsStateList> createState() => _SettingsStateListState();
 
   const SettingsStateList({
     super.key,
@@ -20,7 +20,25 @@ class SettingsStateList extends StatefulWidget {
   });
 }
 
-class _SettingsStateList extends State<SettingsStateList> {
+class _SettingsStateListState extends State<SettingsStateList> {
+  late List<ConfigItem> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = widget.items; // 初始化列表
+    // 订阅所有配置项的通知（简化示例，实际需要遍历添加监听）
+    for (var item in _items) {
+      if (item is ChangeNotifier) {
+        item.addListener(_refresh);
+      }
+    }
+  }
+
+  void _refresh() {
+    setState(() {}); // 强制刷新
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -65,7 +83,11 @@ class _SettingsStateList extends State<SettingsStateList> {
                 ? Text(item.subtitle!, style: theme.textTheme.bodySmall)
                 : null,
         trailing: _buildTrailing(item, theme, isIOS),
-        onTap: item is NavigationConfigItem ? item.onTap : null,
+        onTap:
+            () =>
+                item is NavigationConfigItem
+                    ? item.navigateTo(context, item.childWidget)
+                    : null,
       ),
     );
   }
@@ -87,7 +109,8 @@ class _SettingsStateList extends State<SettingsStateList> {
     if (item is SwitchConfigItem) {
       return Switch.adaptive(
         value: item.value,
-        onChanged: item.onChanged,
+        // onChanged: item.onChanged,
+        onChanged: (value) => item.updateSwitchValue(value),
         activeColor: isIOS ? theme.colorScheme.primary : null,
       );
     }
@@ -100,7 +123,7 @@ class _SettingsStateList extends State<SettingsStateList> {
         child: Switch.adaptive(
           key: ValueKey(item.isDarkMode),
           value: item.isDarkMode,
-          onChanged: (value) => item.onThemeChanged!(value),
+          onChanged: (value) => item.updateSwitchValue(value),
           activeColor: isIOS ? theme.colorScheme.primary : null,
         ),
       );

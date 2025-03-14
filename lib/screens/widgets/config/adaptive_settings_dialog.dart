@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:magicai/screens/widgets/config/config_statement_core.dart';
 
-import 'config_core.dart';
+import 'config_statement_core.dart';
 import 'config_item.dart';
 
 void main() => runApp(const MyApp());
@@ -15,13 +14,25 @@ class MyApp extends StatelessWidget {
       title: '跨平台配置组件',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-      home: const HomePage(),
+      home: HomePage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+// 修改 HomePage 类定义
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isDarkMode = false; // 新增状态变量
+
+  void _handleThemeChange(bool newValue) {
+    setState(() {
+      _isDarkMode = newValue; // 更新本地状态
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,32 +40,45 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(title: const Text('首页')),
       body: Center(
         child: ElevatedButton(
-          child: const Text('打开设置'),
           onPressed:
               () => showSettings(context, [
-                SectionHeaderItem(title: '外观设置'),
                 ThemeConfigItem(
+                  // 正确绑定回调和状态
                   title: '深色模式',
                   icon: Icons.dark_mode_outlined,
-                  isDarkMode: false,
-                  onThemeChanged: (value) => {},
+                  isDarkMode: _isDarkMode, // ← 绑定到本地变量
+                  onThemeChanged: _handleThemeChange, // ← 使用有效方法
                 ),
-                // 添加更多配置项...
               ]),
+          child: const Text('打开设置'),
         ),
       ),
     );
   }
 }
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   final List<ConfigItem> items;
   const SettingsPage({super.key, required this.items});
+
+  @override
+  State<StatefulWidget> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late List<ConfigItem> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = widget.items;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
-      body: SettingsList(items: items),
+      body: SettingsStateList(items: _items),
     );
   }
 }
@@ -178,31 +202,25 @@ class __DesktopSettingsPanelState extends State<_DesktopSettingsPanel> {
 }
 
 void showSettings(BuildContext context, List<ConfigItem> settingsItems) {
-  Navigator.push(
+  if (Theme.of(context).platform == TargetPlatform.iOS ||
+      Theme.of(context).platform == TargetPlatform.android) {
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SettingsPage(items: settingsItems),
       ),
     );
-  // if (Theme.of(context).platform == TargetPlatform.iOS ||
-  //     Theme.of(context).platform == TargetPlatform.android) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => SettingsPage(items: settingsItems),
-  //     ),
-  //   );
-  // } else {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return StatefulBuilder(
-  //         builder: (context, setState) {
-  //           return AdaptiveSettingsDialog(items: settingsItems);
-  //         },
-  //       );
-  //     },
-  //     // (context) => AdaptiveSettingsDialog(items: settingsItems),
-  //   );
-  // }
+  } else {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AdaptiveSettingsDialog(items: settingsItems);
+          },
+        );
+      },
+      // (context) => AdaptiveSettingsDialog(items: settingsItems),
+    );
+  }
 }

@@ -61,14 +61,14 @@ class SwitchConfigItem extends ConfigItem {
 }
 
 class NavigationConfigItem extends ConfigItem {
-  final VoidCallback onTap;
+  final Widget childWidget;
 
   NavigationConfigItem({
     required super.title,
     required super.icon,
     super.iconColor,
     super.subtitle,
-    required this.onTap,
+    required this.childWidget,
   });
 
   void navigateTo(BuildContext context, Widget widget) {
@@ -135,15 +135,31 @@ class InfoConfigItem extends ConfigItem {
 }
 
 class ThemeConfigItem extends ConfigItem {
-  final bool isDarkMode;
+  bool _isDarkMode;
   final ValueChanged<bool>? onThemeChanged;
+
   ThemeConfigItem({
     required super.title,
     required super.icon,
     super.subtitle,
-    required this.isDarkMode,
+    required bool isDarkMode,
     this.onThemeChanged,
-  });
+  }) : _isDarkMode = isDarkMode;
+
+  bool get isDarkMode => _isDarkMode;
+
+  set isDarkMode(bool value) {
+    if (_isDarkMode != value) {
+      _isDarkMode = value;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void updateSwitchValue(bool newValue) {
+    _isDarkMode = newValue; // 更新自身状态
+    onThemeChanged?.call(newValue); // 调用回调通知父组件
+  }
 }
 
 class SectionHeaderItem extends ConfigItem {

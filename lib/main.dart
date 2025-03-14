@@ -42,6 +42,11 @@ class _MagicAIAppState extends State<MagicAIApp> {
         onThemeChanged: (value) => setState(() => _isDarkMode = value),
       ),
       SectionHeaderItem(title: "模型配置"),
+      NavigationConfigItem(
+        title: '隐私设置',
+        icon: Icons.lock_outline,
+        childWidget: AboutDialog.adaptive(),
+      ),
       SwitchConfigItem(
         title: "switch 测试",
         icon: Icons.abc,
@@ -78,9 +83,16 @@ class _MagicAIAppState extends State<MagicAIApp> {
 }
 
 class AdaptiveHomePage extends StatefulWidget {
-  final settingsItems;
+  final List<ConfigItem> settingsItems;
+  // bool isDarkMode;
+  // final ValueChanged<bool> onThemeChanged;
 
-  AdaptiveHomePage({super.key, required this.settingsItems});
+  AdaptiveHomePage({
+    super.key,
+    required this.settingsItems,
+    // required this.isDarkMode,
+    // required this.onThemeChanged,
+  });
 
   @override
   State<AdaptiveHomePage> createState() => _AdaptiveHomePageState();

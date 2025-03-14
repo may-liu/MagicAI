@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:magicai/screens/widgets/config/config_core.dart';
-import 'package:magicai/screens/widgets/config/config_item.dart';
+import 'config_item.dart';
+import 'config_statement_core.dart';
 
 void main() => runApp(const SettingsApp());
 
@@ -77,7 +77,7 @@ class _SettingsPageExampleState extends State<SettingsPageExample> {
       NavigationConfigItem(
         title: '隐私设置',
         icon: Icons.lock_outline,
-        onTap: () => _navigateToPrivacy(context), // 传递正确的context
+        childWidget: const PrivacySettingsPage(), // 传递正确的context
       ),
 
       InputConfigItem(
@@ -101,7 +101,7 @@ class _SettingsPageExampleState extends State<SettingsPageExample> {
         centerTitle: false,
         elevation: 0.5,
       ),
-      body: SettingsList(items: items),
+      body: SettingsStateList(items: items),
     );
   }
 
@@ -164,7 +164,7 @@ class PrivacySettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('隐私设置')),
-      body: SettingsList(
+      body: SettingsStateList(
         items: [
           SwitchConfigItem(
             title: '已读回执',
