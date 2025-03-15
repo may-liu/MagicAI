@@ -81,6 +81,11 @@ class Topic {
             current.content = message;
             current.messageType = type;
             messages.add(current);
+            _eventLock.synchronized(() async {
+              for (var element in _eventNotifiers) {
+                element.onResponseReceivingCallback(current);
+              }
+            });
             if (type == MessageType.User) {
               Pair<int, int> pos = await TopicContext.appendContext(
                 current.messageType,

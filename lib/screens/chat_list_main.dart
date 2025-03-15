@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:magicai/entity/file_node.dart';
 import 'package:magicai/screens/widgets/file_operation_menu.dart';
+import 'package:magicai/services/system_manager.dart';
 
 typedef OnFileSelected = void Function(String filename);
 
@@ -32,16 +33,24 @@ class _ChatFileListState extends State<ChatFileList> {
   final Map<String, bool> _expansionState = {};
   bool _isInitialized = false;
   late FileNode _root;
+  late String _currentRoot;
   late RootExpansionMode mode;
   @override
   void initState() {
-    mode = widget.expansionMode;
-    _initializeState();
     super.initState();
+    mode = widget.expansionMode;
+    _currentRoot = widget.topicRoot.path;
+    _initializeRoot(_currentRoot);
+    SystemManager.instance.registerLocationEvent((old, now, forcerefrash) {
+      if (_currentRoot != now || forcerefrash) {
+        _currentRoot = now;
+        _initializeRoot(_currentRoot);
+      }
+    });
   }
 
-  void _initializeState() {
-    FileNode.fromDirectory(widget.topicRoot).then((value) {
+  void _initializeRoot(String root) {
+    FileNode.fromDirectory(Directory(root)).then((value) {
       _root = value;
       _isInitialized = true;
       if (mode == RootExpansionMode.hideAndExpand) {
@@ -85,26 +94,32 @@ class _ChatFileListState extends State<ChatFileList> {
   }
 
   void _handleDoubleTap(FileNode node) async {
-    try {
-      if (node.isDirectory) {
-        final currentState = _expansionState[node.path] ?? false;
-
-        if (!node.isLoaded) {
-          final newChildren = await node.loadChildren();
-          // 更新为不可变模式
-          final newNode = node.copyWith(newChildren);
-          _registerChildren(newNode);
-          node = newNode;
-        }
-
-        setState(() => _expansionState[node.path] = !currentState);
-      } else {
-        widget.onFileSelected(node.path);
-      }
-      // ...
-    } catch (e) {
-      debugPrint('Error handling double tap: $e');
+    if (node.isDirectory) {
+      // final currentState = _expansionState[node.path] ?? false;
+      SystemManager.instance.doChangeFolder(node.path);
+    } else {
+      widget.onFileSelected(node.path);
     }
+    // try {
+    //   if (node.isDirectory) {
+    //     final currentState = _expansionState[node.path] ?? false;
+
+    //     if (!node.isLoaded) {
+    //       final newChildren = await node.loadChildren();
+    //       // 更新为不可变模式
+    //       final newNode = node.copyWith(newChildren);
+    //       _registerChildren(newNode);
+    //       node = newNode;
+    //     }
+
+    //     setState(() => _expansionState[node.path] = !currentState);
+    //   } else {
+    //     widget.onFileSelected(node.path);
+    //   }
+    //   // ...
+    // } catch (e) {
+    //   debugPrint('Error handling double tap: $e');
+    // }
   }
 
   List<Widget> _buildRootNodes() {

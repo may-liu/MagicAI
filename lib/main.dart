@@ -4,10 +4,12 @@ import 'dart:io' show Platform;
 import 'package:magicai/entity/file_node.dart';
 import 'package:magicai/screens/chat_detail_main.dart';
 import 'package:magicai/screens/chat_list_main.dart';
-import 'package:magicai/screens/widgets/config/adaptive_settings_dialog.dart';
-import 'package:magicai/screens/widgets/config/config_item.dart';
+import 'package:magicai/modules/config/adaptive_settings_dialog.dart';
+import 'package:magicai/modules/config/config_item.dart';
+import 'package:magicai/screens/widgets/config/model.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
 import 'package:magicai/services/system_manager.dart';
+import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
 
 late FileNode _globalNode;
 
@@ -45,7 +47,7 @@ class _MagicAIAppState extends State<MagicAIApp> {
       NavigationConfigItem(
         title: '隐私设置',
         icon: Icons.lock_outline,
-        childWidget: AboutDialog.adaptive(),
+        childWidget: ModelListTest(),
       ),
       SwitchConfigItem(
         title: "switch 测试",
@@ -131,8 +133,6 @@ class _DesktopLayoutState extends State<DesktopLayout> {
     setState(() => _sidebarVisible = !_sidebarVisible);
   }
 
-  void _updateThemeMode(ThemeMode mode) {}
-
   void _updateLayout(double delta) {
     double maxWidth = MediaQuery.of(context).size.width - _sidebarWidth;
     setState(() {
@@ -196,10 +196,7 @@ class _DesktopLayoutState extends State<DesktopLayout> {
           ),
           Expanded(
             flex: 2,
-            child: ChatScreen(
-              updateThemeMode: (p0) => _updateThemeMode,
-              currentThemeMode: ThemeMode.system,
-            ),
+            child: ChatScreen(currentThemeMode: ThemeMode.system),
           ),
         ],
       ),
@@ -229,10 +226,7 @@ class StatelessDesktopLayout extends StatelessWidget {
           const VerticalDivider(width: 4),
           Expanded(
             flex: 2,
-            child: ChatScreen(
-              updateThemeMode: (p0) => _updateThemeMode,
-              currentThemeMode: ThemeMode.system,
-            ),
+            child: ChatScreen(currentThemeMode: ThemeMode.system),
           ),
         ],
       ),
@@ -250,7 +244,6 @@ class MobileLayout extends StatefulWidget {
 
 class _MobileLayoutState extends State<MobileLayout> {
   final _navigatorKey = GlobalKey<NavigatorState>();
-  Chat? _selectedChat;
 
   void _openDrawer() {
     Scaffold.of(context).openDrawer();
@@ -276,10 +269,7 @@ class _MobileLayoutState extends State<MobileLayout> {
                         _navigatorKey.currentState!.pop();
                       }
                     },
-                    child: ChatDetail(
-                      chat: _selectedChat,
-                      onBack: () => _navigatorKey.currentState!.pop(),
-                    ),
+                    child: ChatScreen(currentThemeMode: ThemeMode.system),
                   ),
                 );
               }
@@ -291,10 +281,7 @@ class _MobileLayoutState extends State<MobileLayout> {
                   ),
                   title: const Text('Chats'),
                 ),
-                body: ChatFileList(
-                  onFileSelected: (String filePath) {},
-                  topicRoot: SystemManager.instance.topicRoot,
-                ),
+                body: ChatScreen(currentThemeMode: ThemeMode.system),
               );
             },
           );
@@ -316,132 +303,56 @@ class SideBar extends StatelessWidget {
       width: width,
       child: Column(
         children: [
-          IconButton(icon: const Icon(Icons.message), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.contacts), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.message),
+            tooltip: '新建聊天',
+            onPressed: () {
+              InputDialog.showInputPrompt(
+                context: context,
+                title: '新对话名称',
+                placeholder: '新名称',
+              ).then(
+                (value) =>
+                    (value != null)
+                        ? SystemManager.instance.doNewTopic(topic: value)
+                        : null,
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder),
+            tooltip: '新建组',
+            onPressed: () {
+              InputDialog.showInputPrompt(
+                context: context,
+                title: '新建组',
+                placeholder: '输入组名称',
+              ).then(
+                (value) =>
+                    (value != null)
+                        ? SystemManager.instance.doNewFolder(folder: value)
+                        : null,
+              );
+            },
+          ),
+          const Spacer(),
           IconButton(
             icon: const Icon(Icons.settings),
+            tooltip: '系统配置',
             onPressed: () {
               showSettings(context, settingsItems);
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.info),
+            tooltip: '关于',
+            onPressed: () {
+              showSettings(context, settingsItems);
+            },
+          ),
+          const SizedBox(height: 24.0),
         ],
       ),
     );
   }
 }
-
-class ChatDetail extends StatelessWidget {
-  final Chat? chat;
-  final VoidCallback? onBack;
-
-  const ChatDetail({super.key, this.chat, this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: onBack,
-        ),
-        title: Text(chat?.name ?? 'Select a chat'),
-      ),
-      body:
-          chat == null
-              ? const Center(child: Text('Select a chat to start'))
-              : Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      reverse: true,
-                      itemCount: chat!.messages.length,
-                      itemBuilder: (context, index) {
-                        final message = chat!.messages[index];
-                        return ChatMessageWidget(message: message);
-                      },
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-    );
-  }
-}
-
-class ChatMessageWidget extends StatelessWidget {
-  final Message message;
-
-  const ChatMessageWidget({super.key, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.all(8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color:
-              message.isMe
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(message.content),
-      ),
-    );
-  }
-}
-
-// Data models
-class Chat {
-  final String name;
-  final String lastMessage;
-  final String time;
-  final List<Message> messages;
-
-  Chat({
-    required this.name,
-    required this.lastMessage,
-    required this.time,
-    required this.messages,
-  });
-}
-
-class Message {
-  final String content;
-  final DateTime time;
-  final bool isMe;
-
-  Message({required this.content, required this.time, required this.isMe});
-}
-
-// Demo data
-final demoChats = [
-  Chat(
-    name: 'John Doe',
-    lastMessage: 'Hello there!',
-    time: '10:30',
-    messages: [
-      Message(content: 'Hello there!', time: DateTime.now(), isMe: false),
-      Message(content: 'Hi! How are you?', time: DateTime.now(), isMe: true),
-    ],
-  ),
-  Chat(
-    name: 'Alice Smith',
-    lastMessage: 'See you tomorrow',
-    time: '09:45',
-    messages: [
-      Message(content: 'Meeting at 3pm', time: DateTime.now(), isMe: false),
-      Message(content: 'Got it, thanks!', time: DateTime.now(), isMe: true),
-    ],
-  ),
-];

@@ -58,8 +58,13 @@ class OpenaiClient implements GptClient {
   MessageType _current_type = MessageType.User;
 
   // 私有构造函数，防止外部直接实例化
-  OpenaiClient._(this._client, {ModelConfig? config})
-    : _config = config ?? SystemManager.instance.currentModel()!;
+  OpenaiClient._(this._client, {ModelConfig? config}) {
+    if (config == null && SystemManager.instance.currentModel() == null) {
+      _config = ModelConfig.byUrl(_client.second.toString(), _client.first);
+    } else {
+      _config = config ?? SystemManager.instance.currentModel()!;
+    }
+  }
 
   static Future<Map<String, dynamic>> _determineScheme(Uri uri) async {
     try {

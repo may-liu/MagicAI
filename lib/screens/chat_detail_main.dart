@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:magicai/screens/widgets/adaptive_send_button.dart';
+import 'package:magicai/modules/controls/adaptive_send_button.dart';
 import 'package:magicai/screens/widgets/bubble/blog_post.dart';
 import 'package:magicai/screens/widgets/bubble/chat_bubble.dart';
 import 'package:magicai/services/abstract_client.dart';
@@ -13,14 +13,9 @@ import 'package:magicai/entity/system_settings.dart';
 import 'package:magicai/services/openai_client.dart';
 
 class ChatScreen extends StatefulWidget {
-  final Function(ThemeMode) updateThemeMode;
   final ThemeMode currentThemeMode;
 
-  const ChatScreen({
-    super.key,
-    required this.updateThemeMode,
-    required this.currentThemeMode,
-  });
+  const ChatScreen({super.key, required this.currentThemeMode});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -145,12 +140,14 @@ class _ChatScreenState extends State<ChatScreen>
         _scrollController.offset < _scrollController.position.maxScrollExtent) {
       final double scrollDistance =
           _scrollController.position.maxScrollExtent - _scrollController.offset;
-      final int durationMs = (scrollDistance * 0.3).toInt(); // 根据滚动距离动态计算时长
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: durationMs),
-        curve: Curves.easeOut,
-      );
+      if (scrollDistance > 0) {
+        final int durationMs = (scrollDistance * 0.3).toInt(); // 根据滚动距离动态计算时长
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: durationMs),
+          curve: Curves.easeOut,
+        );
+      }
     }
   }
 
@@ -196,12 +193,17 @@ class _ChatScreenState extends State<ChatScreen>
                 return ListView.builder(
                   // shrinkWrap: true,
                   // physics: const NeverScrollableScrollPhysics(),
+                  key: ValueKey('chat_item'),
                   controller: _scrollController,
                   padding: const EdgeInsets.all(8.0),
                   reverse: false,
                   itemCount: value.length,
                   itemBuilder:
-                      (context, index) => _buildMessage(value[index], index),
+                      (context, index) => TextInheritedWidget(
+                        key: ValueKey(index),
+                        text: value[index].content,
+                        child: _buildMessage(value[index], index),
+                      ),
                 );
               },
             ),
@@ -351,8 +353,8 @@ class _ChatScreenState extends State<ChatScreen>
         if (_sendingButtonState != ButtonState.initial) {
           _sendingButtonState = ButtonState.initial;
         }
-        _messagestNotifier.value =
-            TopicManager().getTopic(_topicTitle)!.messages;
+        // _messagestNotifier.value =
+        //     TopicManager().getTopic(_topicTitle)!.messages;
       });
     }
   }
@@ -361,11 +363,30 @@ class _ChatScreenState extends State<ChatScreen>
   void onResponseReceivingCallback(ChatMessage message) {
     if (mounted) {
       setState(() {
-        _messagestNotifier.value;
+        //   _messagestNotifier.value;
       });
       if (_shouldAutoScroll) {
         _scrollToBottom();
       }
     }
+  }
+}
+
+class TextInheritedWidget extends InheritedWidget {
+  final String text;
+
+  const TextInheritedWidget({
+    Key? key,
+    required this.text,
+    required Widget child,
+  }) : super(key: key, child: child);
+
+  static TextInheritedWidget? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<TextInheritedWidget>();
+  }
+
+  @override
+  bool updateShouldNotify(TextInheritedWidget oldWidget) {
+    return oldWidget.text != text;
   }
 }

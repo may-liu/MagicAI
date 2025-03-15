@@ -14,6 +14,10 @@ class ModelConfig {
   double topP = 1.0;
   int pageSize = 5;
 
+  static ModelConfig byUrl(String url, String apiKey) {
+    return ModelConfig('', url, apiKey, 0, '', 5, 0.0, 1.0);
+  }
+
   ModelConfig(
     this.modelName,
     this.url,
@@ -25,13 +29,16 @@ class ModelConfig {
     this.topP,
   );
   ModelConfig.fromJsonBody(this.modelName, Map<String, dynamic> modelBody) {
-    index = modelBody['index'];
+    assert(modelBody.containsKey('url'));
+    assert(modelBody.containsKey('api_key'));
+
+    index = modelBody['index'] ?? 0;
     url = modelBody['url'];
     apiKey = modelBody['api_key'];
-    modelId = modelBody['model_id'];
-    pageSize = modelBody['page_size'];
-    temperature = modelBody['temp'];
-    topP = modelBody['top_p'];
+    modelId = modelBody['model_id'] ?? '';
+    pageSize = modelBody['page_size'] ?? 5;
+    temperature = modelBody['temp'] ?? 0.0;
+    topP = modelBody['top_p'] ?? 1.0;
   }
 
   Map<String, dynamic> toConfigWithoutName() {

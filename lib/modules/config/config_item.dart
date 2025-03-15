@@ -22,7 +22,7 @@ import 'package:flutter/material.dart';
 //   // @override
 //   // int get hashCode => /* 实现哈希码 */;
 // }
-abstract class ConfigItem extends ChangeNotifier {
+abstract class ConfigItem {
   final String title;
   final IconData icon;
   final Color? iconColor;
@@ -35,9 +35,7 @@ abstract class ConfigItem extends ChangeNotifier {
     this.subtitle,
   });
 
-  void updateSwitchValue(bool newValue) {
-    notifyListeners();
-  }
+  void updateSwitchValue(bool newValue) {}
 }
 
 class SwitchConfigItem extends ConfigItem {
@@ -77,7 +75,19 @@ class NavigationConfigItem extends ConfigItem {
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => widget,
+        pageBuilder: (_, __, ___) {
+          final size = MediaQuery.of(context).size;
+          return Dialog(
+            insetPadding: EdgeInsets.symmetric(horizontal: 24.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: size.height,
+                maxWidth: size.width,
+              ),
+              child: widget,
+            ),
+          );
+        },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           if (isIOS) {
             return _buildIOSSlideTransition(

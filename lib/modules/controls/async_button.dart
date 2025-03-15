@@ -31,7 +31,7 @@ class AsyncButton extends StatefulWidget {
   const AsyncButton({super.key, required this.onPressed, required this.child});
 
   @override
-  _AsyncButtonState createState() => _AsyncButtonState();
+  State<StatefulWidget> createState() => _AsyncButtonState();
 }
 
 class _AsyncButtonState extends State<AsyncButton> {

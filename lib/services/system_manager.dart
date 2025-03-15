@@ -18,6 +18,17 @@ import 'package:synchronized/synchronized.dart';
 
 typedef LocalFileChangedCallback = Topic Function(LocalFileChangedEvent event);
 
+typedef DataLocationChangedCallback =
+    void Function(String old, String now, bool forcerefrash);
+
+class DataLocationChangedEvent {
+  final old;
+  final now;
+  final forceRefrash;
+
+  DataLocationChangedEvent(this.old, this.now, this.forceRefrash);
+}
+
 class LocalFileChangedEvent {
   final String oldTitle;
   final String newTitle;
@@ -37,7 +48,8 @@ class SystemManager {
   late String _currentChatingFile = '';
   final Lock _configLock = Lock();
 
-  final EventBus _eventBus = EventBus();
+  final EventBus _localFileChangedEvent = EventBus();
+  final EventBus _dataLocationChangedEvent = EventBus();
 
   static Future<void> initialize() async {
     _instance = SystemManager._internal();
@@ -48,18 +60,29 @@ class SystemManager {
     subscription.cancel();
   }
 
-  StreamSubscription registerEvent(LocalFileChangedCallback callback) {
-    var subscription = _eventBus.on<LocalFileChangedEvent>().listen((event) {
-      if (!TopicManager().containsTopic(currentTitle)) {
-        Topic t = callback(event);
-        TopicManager().addTopic(currentTitle, t);
-      } else {
-        callback(event);
-      }
-    });
+  StreamSubscription registerLocationEvent(
+    DataLocationChangedCallback callback,
+  ) {
+    var subscription = _dataLocationChangedEvent
+        .on<DataLocationChangedEvent>()
+        .listen((event) {
+          callback(event.old, event.now, event.forceRefrash);
+        });
     return subscription;
+  }
 
-    // eventBus.fire(UserLoginEvent('user123'));
+  StreamSubscription registerEvent(LocalFileChangedCallback callback) {
+    var subscription = _localFileChangedEvent
+        .on<LocalFileChangedEvent>()
+        .listen((event) {
+          if (!TopicManager().containsTopic(currentTitle)) {
+            Topic t = callback(event);
+            TopicManager().addTopic(currentTitle, t);
+          } else {
+            callback(event);
+          }
+        });
+    return subscription;
   }
 
   static late final SystemManager _instance;
@@ -69,6 +92,8 @@ class SystemManager {
   static SystemManager get instance => _instance;
 
   String _dataLocation = '';
+
+  String _currentFolder = '';
 
   Directory _topicLocation = Directory.current;
 
@@ -99,6 +124,22 @@ class SystemManager {
   int currentPromptIndex() {
     final index = SystemConfig.instance.promptIndex;
     return index < 0 ? -1 : index;
+  }
+
+  void doChangeFolder(String folder) {
+    if (isSubDirectory(folder, _dataLocation)) {
+      if (_currentFolder != folder) {
+        var old = _currentFolder;
+        _currentFolder = folder;
+        _dataLocationChangedEvent.fire(
+          DataLocationChangedEvent(old, _currentFolder, false),
+        );
+      }
+    } else {
+      _dataLocationChangedEvent.fire(
+        DataLocationChangedEvent(_currentFolder, _currentFolder, true),
+      );
+    }
   }
 
   Future<void> doSelectPrompt(int index) async {
@@ -140,6 +181,7 @@ class SystemManager {
       if (location.isNotEmpty) {
         var filepath = jsonDecode(location)['data_path'];
         _dataLocation = filepath;
+        _currentFolder = _dataLocation;
         _topicLocation = Directory(path.join(_dataLocation, "topics"));
         _configFileName = path.join(filepath, _configFileName);
         debugPrint('config file path moved to $_configFileName');
@@ -148,6 +190,8 @@ class SystemManager {
         var base = await FileStorageUtils.getDefaultPath();
 
         _topicLocation = Directory(path.join(base.path, "topics"));
+        _dataLocation = _topicLocation.path;
+        _currentFolder = _dataLocation;
         jsonStr = await FileStorageUtils.readFile(_configFileName);
       }
 
@@ -169,6 +213,16 @@ class SystemManager {
     return result;
   }
 
+  bool isSubDirectory(String pathA, String pathB) {
+    // 规范化路径，处理不同操作系统的路径分隔符和多余的斜杠等
+    String normalizedPathA = path.normalize(pathA);
+    String normalizedPathB = path.normalize(pathB);
+
+    // 检查路径 A 是否以路径 B 开头，并且路径 A 不等于路径 B
+    return normalizedPathA.startsWith(normalizedPathB) &&
+        normalizedPathA != normalizedPathB;
+  }
+
   Future<void> setDataLocation(String? value) async {
     if (value != null && value.isNotEmpty) {
       await FileStorageUtils.writeFile(
@@ -186,7 +240,7 @@ class SystemManager {
     }
   }
 
-  String generateFileNameWithTimestampAndRandom(String extension) {
+  String generateFileNameWithTimestampAndRandom({String extension = 'md'}) {
     // 获取当前时间戳
     String timestamp = DateFormat('yyyyMMddHHmmssSSS').format(DateTime.now());
     // 生成随机数
@@ -202,9 +256,10 @@ class SystemManager {
 
   String get currentFile {
     if (_currentChatingFile.isEmpty) {
-      _currentChatingFile = generateFileNameWithTimestampAndRandom('md');
+      _currentChatingFile = generateFileNameWithTimestampAndRandom();
     }
-    return path.join(_topicLocation.path, _currentChatingFile);
+    // return path.join(_topicLocation.path, _currentChatingFile);
+    return path.join(_currentFolder, _currentChatingFile);
   }
 
   String get currentTitle {
@@ -229,7 +284,7 @@ class SystemManager {
       t.loadMessage().then((value) {
         if (value) {
           TopicManager().addTopic(currentTitle, t);
-          _eventBus.fire(
+          _localFileChangedEvent.fire(
             LocalFileChangedEvent(oldTitle, currentTitle, oldTopic, t),
           );
           TopicManager().removeTpoic(oldTitle);
@@ -251,9 +306,44 @@ class SystemManager {
       t.loadMessage();
       TopicManager().addTopic(currentTitle, t);
       SystemManager.instance.saveSystemConfig();
-      _eventBus.fire(
+      _localFileChangedEvent.fire(
         LocalFileChangedEvent(currentTitle, currentTitle, topic, t),
       );
     });
+  }
+
+  void doNewFolder({String folder = ''}) {
+    String newFolder = path.join(_currentFolder, folder);
+    Directory(newFolder).create().then(
+      (value) => _dataLocationChangedEvent.fire(
+        DataLocationChangedEvent(_currentFolder, _currentFolder, true),
+      ),
+    );
+  }
+
+  void doNewTopic({String topic = ''}) {
+    if (topic.isEmpty) {
+      topic = generateFileNameWithTimestampAndRandom();
+    }
+    if (!topic.endsWith('.md')) {
+      topic = '$topic.md';
+    }
+
+    var oldfile = _currentChatingFile;
+    _currentChatingFile = topic;
+
+    var oldTopic = TopicManager().currentTopic;
+
+    Topic t = Topic(currentTitle, currentFile);
+
+    _localFileChangedEvent.fire(
+      LocalFileChangedEvent(oldfile, topic, oldTopic, t),
+    );
+
+    File(currentFile).create().then(
+      (value) => _dataLocationChangedEvent.fire(
+        DataLocationChangedEvent(_currentFolder, _currentFolder, true),
+      ),
+    );
   }
 }

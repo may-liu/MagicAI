@@ -15,6 +15,26 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 import 'package:google_fonts/google_fonts.dart';
 
+// 定义一个 InheritedWidget 来共享文本数据
+class TextInheritedWidget extends InheritedWidget {
+  final String text;
+
+  const TextInheritedWidget({
+    Key? key,
+    required this.text,
+    required Widget child,
+  }) : super(key: key, child: child);
+
+  static TextInheritedWidget? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<TextInheritedWidget>();
+  }
+
+  @override
+  bool updateShouldNotify(TextInheritedWidget oldWidget) {
+    return oldWidget.text != text;
+  }
+}
+
 // 在文件顶部添加扩展方法（如果尚未添加）
 extension IterableExtension<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T element) test) {
@@ -119,8 +139,14 @@ class ThinkBlockWidget extends StatefulWidget {
 }
 
 class _ThinkBlockWidgetState extends State<ThinkBlockWidget> {
-  bool _expanded = false;
+  late bool _expanded;
   final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +296,7 @@ Widget getHtmlView(String contentHtml, BuildContext context) {
       // 'td': Style(padding: HtmlPaddings.all(8)),
       'blockquote': Style(
         border: Border(left: BorderSide(color: Colors.grey, width: 4)),
-        padding: HtmlPaddings.only(left: 16),
+        padding: HtmlPaddings.only(left: 4),
         fontStyle: FontStyle.italic,
       ),
       "pre": Style(
@@ -800,7 +826,7 @@ asdf
   }
 }
 
-class HybridMarkdown extends StatelessWidget {
+class HybridMarkdown extends StatefulWidget {
   final String content;
   final bool needTransfer;
 
@@ -809,6 +835,16 @@ class HybridMarkdown extends StatelessWidget {
     required this.content,
     this.needTransfer = false,
   });
+
+  @override
+  State<StatefulWidget> createState() => _HybridMarkdownState();
+}
+
+class _HybridMarkdownState extends State<HybridMarkdown> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   List<String> extractTags(String html) {
     dom.Document document = html_parser.parse(html);
@@ -832,7 +868,10 @@ class HybridMarkdown extends StatelessWidget {
     return SingleChildScrollView(
       // child: SelectableRegion(
       // selectionControls: materialTextSelectionControls,
-      child: getHtmlView(content, context),
+      child: TextInheritedWidget(
+        text: widget.content,
+        child: getHtmlView(widget.content, context),
+      ),
       // ),
     );
   }

@@ -28,11 +28,11 @@ class _SettingsStateListState extends State<SettingsStateList> {
     super.initState();
     _items = widget.items; // 初始化列表
     // 订阅所有配置项的通知（简化示例，实际需要遍历添加监听）
-    for (var item in _items) {
-      if (item is ChangeNotifier) {
-        item.addListener(_refresh);
-      }
-    }
+    // for (var item in _items) {
+    //   if (item is ChangeNotifier) {
+    //     item.addListener(_refresh);
+    //   }
+    // }
   }
 
   void _refresh() {
