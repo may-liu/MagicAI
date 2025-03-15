@@ -141,7 +141,8 @@ class _ChatScreenState extends State<ChatScreen>
       final double scrollDistance =
           _scrollController.position.maxScrollExtent - _scrollController.offset;
       if (scrollDistance > 0) {
-        final int durationMs = (scrollDistance * 0.3).toInt(); // 根据滚动距离动态计算时长
+        int durationMs = (scrollDistance * 0.3).toInt(); // 根据滚动距离动态计算时长
+        durationMs = durationMs <= 0 ? 1 : durationMs;
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: Duration(milliseconds: durationMs),
@@ -376,10 +377,10 @@ class TextInheritedWidget extends InheritedWidget {
   final String text;
 
   const TextInheritedWidget({
-    Key? key,
+    super.key,
     required this.text,
-    required Widget child,
-  }) : super(key: key, child: child);
+    required super.child,
+  });
 
   static TextInheritedWidget? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<TextInheritedWidget>();

@@ -83,15 +83,15 @@ class _ChatFileListState extends State<ChatFileList> {
     return view;
   }
 
-  void _registerChildren(FileNode parent) {
-    for (final child in parent.children) {
-      _expansionState.putIfAbsent(child.path, () => false);
+  // void _registerChildren(FileNode parent) {
+  //   for (final child in parent.children) {
+  //     _expansionState.putIfAbsent(child.path, () => false);
 
-      if (child.isDirectory) {
-        _registerChildren(child);
-      }
-    }
-  }
+  //     if (child.isDirectory) {
+  //       _registerChildren(child);
+  //     }
+  //   }
+  // }
 
   void _handleDoubleTap(FileNode node) async {
     if (node.isDirectory) {
@@ -171,10 +171,10 @@ class _ChatFileListState extends State<ChatFileList> {
                         : Theme.of(context).colorScheme.onSurface,
               ),
               title: Text(node.name),
-              trailing:
-                  node.isDirectory
-                      ? Icon(isExpanded ? Icons.expand_less : Icons.expand_more)
-                      : null,
+              // trailing:
+              // node.isDirectory
+              // ? Icon(isExpanded ? Icons.expand_less : Icons.expand_more)
+              // : null,
               contentPadding: EdgeInsets.zero,
               minLeadingWidth: 24,
             ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart'; // 引入 kIsWeb 所在的包
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_io/io.dart';
+import 'package:path/path.dart' as path;
 
 class FileStorageUtils {
   static Future<Directory> getDefaultPath() async {
@@ -95,9 +96,12 @@ class FileStorageUtils {
     // if (kIsWeb) {
     //   return readFileWeb();
     // } else {
-    final filePath = await getFilePath(fileName);
-    final content = await readFileByPath(filePath);
-    return content;
+    if (path.isRelative(fileName)) {
+      final filePath = await getFilePath(fileName);
+      return await readFileByPath(filePath);
+    } else {
+      return await readFileByPath(fileName);
+    }
     // }
   }
 

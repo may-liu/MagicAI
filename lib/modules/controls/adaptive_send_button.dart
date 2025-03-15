@@ -62,10 +62,10 @@ typedef AdaptiveSendButtonSend = void Function();
 typedef AdaptiveSendButtonStop = void Function();
 
 class AdaptiveSendButton extends StatefulWidget {
-  AdaptiveSendButtonSend onSend;
-  AdaptiveSendButtonStop onStop;
-  ButtonState buttonState;
-  AdaptiveSendButton({
+  final AdaptiveSendButtonSend onSend;
+  final AdaptiveSendButtonStop onStop;
+  final ButtonState buttonState;
+  const AdaptiveSendButton({
     super.key,
     required this.onSend,
     required this.onStop,
@@ -100,26 +100,6 @@ class _AdaptiveSendButtonState extends State<AdaptiveSendButton> {
     });
   }
 
-  Future<void> _simulateNetworkRequest() async {
-    try {
-      setState(() => widget.buttonState = ButtonState.sending);
-
-      // 模拟发送请求（第一阶段）
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-
-      setState(() => widget.buttonState = ButtonState.sent);
-
-      // 模拟等待完整响应（第二阶段）
-      await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
-    } finally {
-      if (mounted) {
-        setState(() => widget.buttonState = ButtonState.initial);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -132,7 +112,9 @@ class _AdaptiveSendButtonState extends State<AdaptiveSendButton> {
         // 设置按钮的背景颜色
         backgroundColor: Colors.transparent,
         // 设置按钮的形状为矩形
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
       ),
       onPressed: () {
         switch (widget.buttonState) {

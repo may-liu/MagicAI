@@ -209,11 +209,6 @@ void _deleteFile(BuildContext context, FileNode node) async {
   // 实现删除逻辑
 }
 
-void _openFile(FileNode node) {
-  debugPrint('打开文件: ${node.path}');
-  // 实现打开逻辑
-}
-
 // 处理菜单选择
 Future<Directory?> _handleMenuSelection(
   BuildContext context,

@@ -8,6 +8,7 @@ import 'package:flutter_html/flutter_html.dart';
 // import 'package:flutter_highlight/themes/androidstudio.dart';
 // import 'package:flutter_highlight/themes/darcula.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_html_all/flutter_html_all.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
 // import 'package:flutter_html_all/flutter_html_all.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -20,10 +21,10 @@ class TextInheritedWidget extends InheritedWidget {
   final String text;
 
   const TextInheritedWidget({
-    Key? key,
+    super.key,
     required this.text,
-    required Widget child,
-  }) : super(key: key, child: child);
+    required super.child,
+  });
 
   static TextInheritedWidget? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<TextInheritedWidget>();
@@ -235,6 +236,12 @@ Widget getHtmlView(String contentHtml, BuildContext context) {
 
   finalHtml = _convertToHtml(contentHtml);
 
+  finalHtml = finalHtml.replaceAllMapped(
+    RegExp('<hr />', caseSensitive: false),
+    (match) =>
+        '<hr style="margin: 5px 0; border: none; height: 1px; background-color: grey;">',
+  );
+
   var tags = extractTags(finalHtml);
 
   return Html(
@@ -242,7 +249,7 @@ Widget getHtmlView(String contentHtml, BuildContext context) {
 
     extensions: [
       // MathHtmlExtension(),
-      // TableHtmlExtension(),
+      TableHtmlExtension(),
       TagExtension(
         tagsToExtend: {'pre'},
         builder: (element) {

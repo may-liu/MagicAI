@@ -166,7 +166,10 @@ class SystemManager {
       debugPrint('SystemConfig debug: $jsonStr');
 
       if (_dataLocation.isNotEmpty) {
-        await FileStorageUtils.writeFileByPath(jsonStr, _configFileName);
+        await FileStorageUtils.writeFileByPath(
+          jsonStr,
+          path.join(_dataLocation, _configFileName),
+        );
       } else {
         await FileStorageUtils.writeFile(jsonStr, _configFileName);
       }
@@ -178,22 +181,21 @@ class SystemManager {
     await _configLock.synchronized(() async {
       final location = await FileStorageUtils.readFile('data.json');
       late String jsonStr = '';
+      String filepath = '';
       if (location.isNotEmpty) {
-        var filepath = jsonDecode(location)['data_path'];
+        filepath = jsonDecode(location)['data_path'];
+      }
+      if (filepath.isNotEmpty) {
         _dataLocation = filepath;
-        _currentFolder = _dataLocation;
-        _topicLocation = Directory(path.join(_dataLocation, "topics"));
-        _configFileName = path.join(filepath, _configFileName);
         debugPrint('config file path moved to $_configFileName');
-        jsonStr = await FileStorageUtils.readFileByPath(_configFileName);
       } else {
         var base = await FileStorageUtils.getDefaultPath();
-
-        _topicLocation = Directory(path.join(base.path, "topics"));
-        _dataLocation = _topicLocation.path;
-        _currentFolder = _dataLocation;
-        jsonStr = await FileStorageUtils.readFile(_configFileName);
+        _dataLocation = base.path;
       }
+      _configFileName = path.join(_dataLocation, _configFileName);
+      _topicLocation = Directory(path.join(_dataLocation, "topics"));
+      _currentFolder = _topicLocation.path;
+      jsonStr = await FileStorageUtils.readFile(_configFileName);
 
       if (!await _topicLocation.exists()) {
         await _topicLocation.create(recursive: true);

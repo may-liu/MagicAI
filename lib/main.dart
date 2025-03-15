@@ -1,24 +1,33 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'dart:io' show Platform;
-import 'package:magicai/entity/file_node.dart';
-import 'package:magicai/screens/chat_detail_main.dart';
-import 'package:magicai/screens/chat_list_main.dart';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 import 'package:magicai/modules/config/adaptive_settings_dialog.dart';
 import 'package:magicai/modules/config/config_item.dart';
+import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
+import 'package:magicai/screens/chat_detail_main.dart';
+import 'package:magicai/screens/chat_list_main.dart';
 import 'package:magicai/screens/widgets/config/model.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
+import 'package:magicai/services/environment.dart';
 import 'package:magicai/services/system_manager.dart';
-import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
-
-late FileNode _globalNode;
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   // debugPaintLayerBordersEnabled = true;
   WidgetsFlutterBinding.ensureInitialized();
   await SystemManager.initialize();
-  _globalNode = await FileNode.fromDirectory(SystemManager.instance.topicRoot);
   await HighlighterManager.ensureInitialized(true);
+  if (!EnvironmentUtils.isDesktop) {
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      // 权限已授予
+    }
+    status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) {
+      // 权限已授予
+    }
+  }
   runApp(const MagicAIApp());
 }
 
@@ -89,7 +98,7 @@ class AdaptiveHomePage extends StatefulWidget {
   // bool isDarkMode;
   // final ValueChanged<bool> onThemeChanged;
 
-  AdaptiveHomePage({
+  const AdaptiveHomePage({
     super.key,
     required this.settingsItems,
     // required this.isDarkMode,
@@ -208,8 +217,6 @@ class StatelessDesktopLayout extends StatelessWidget {
   final List<ConfigItem> settingsItems;
   const StatelessDesktopLayout({super.key, required this.settingsItems});
 
-  void _updateThemeMode(ThemeMode mode) {}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,16 +250,15 @@ class MobileLayout extends StatefulWidget {
 }
 
 class _MobileLayoutState extends State<MobileLayout> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-
-  void _openDrawer() {
-    Scaffold.of(context).openDrawer();
-  }
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey();
+  final double _sidebarWidth = 60;
+  bool _sidebarVisible = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
+        // 注意：如果需要保持原drawer功能需保留，但目前逻辑可能冲突建议去掉
         child: SideBar(width: 280, settingsItems: widget.settingsItems),
       ),
       body: Navigator(
@@ -260,35 +266,111 @@ class _MobileLayoutState extends State<MobileLayout> {
         onGenerateRoute: (settings) {
           return MaterialPageRoute(
             settings: settings,
-            builder: (context) {
-              if (settings.name == '/chat') {
-                return Scaffold(
-                  body: GestureDetector(
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity! > 200) {
-                        _navigatorKey.currentState!.pop();
-                      }
-                    },
-                    child: ChatScreen(currentThemeMode: ThemeMode.system),
-                  ),
-                );
-              }
-              return Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: _openDrawer,
-                  ),
-                  title: const Text('Chats'),
-                ),
-                body: ChatScreen(currentThemeMode: ThemeMode.system),
-              );
-            },
+            builder: (context) => _buildPage(context, settings.name),
           );
         },
       ),
     );
   }
+
+  Widget _buildPage(BuildContext context, String? routeName) {
+    if (routeName == '/chat') {
+      return chatScreenWrapper(); // 包装Chat页面
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () => setState(() => _sidebarVisible = !_sidebarVisible),
+          ),
+          title: Text('Chats'),
+        ),
+        body: Row(
+          children: [
+            AnimatedSwitcher(
+              // 动态切换组件，支持动画过渡
+              duration: Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(-1.0, 0), // 初始位置：完全滑出屏幕左侧
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              },
+              child:
+                  _sidebarVisible
+                      ? SizedBox(
+                        // 可见时显示侧边栏
+                        key: ValueKey('visible'),
+                        width: _sidebarWidth,
+                        child: SideBar(
+                          width: _sidebarWidth,
+                          settingsItems: widget.settingsItems,
+                        ),
+                      )
+                      : SizedBox.shrink(), // 隐藏时不占空间
+            ),
+            Expanded(
+              child: ChatFileList(
+                // 主内容区域自动填充剩余空间
+                onFileSelected: (filename) {
+                  _navigatorKey.currentState?.pushNamed('/chat');
+                  SystemManager.instance.changeCurrentFile(filename);
+                },
+                topicRoot: SystemManager.instance.topicRoot,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _handleSearch() => print("搜索功能实现");
+  void _handleSettings() => print("设置菜单弹出");
+
+  // 包装Chat页面并处理手势穿透问题
+  Widget chatScreenWrapper() {
+    return Scaffold(
+      // 添加Scaffold包裹以支持AppBar
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => _navigatorKey.currentState?.pop(),
+        ),
+        title: Text("当前聊天窗口"),
+        actions: [
+          // 自定义操作按钮区域
+          IconButton(
+            icon: Icon(Icons.search),
+            tooltip: "搜索消息",
+            onPressed: _handleSearch,
+          ),
+          IconButton(
+            icon: Icon(Icons.settings),
+            tooltip: "设置选项",
+            onPressed: _handleSettings,
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        // 手势仍有效，但包裹在Scaffold下
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: (details) {
+          if ((details.primaryVelocity?.dx ?? 0).abs() > 200) {
+            Navigator.of(context).pop();
+          }
+        },
+        child: ChatScreen(currentThemeMode: ThemeMode.system),
+      ),
+    );
+  }
+}
+
+extension on double? {
+  get dx => null;
 }
 
 class SideBar extends StatelessWidget {

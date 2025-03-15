@@ -191,7 +191,13 @@ class TopicManager {
 
   String currentKey = '';
 
-  Topic get currentTopic => _keyEntityMap[currentKey]!;
+  Topic? get currentTopic {
+    if (_keyEntityMap.isNotEmpty) {
+      return _keyEntityMap[currentKey]!;
+    }
+    return null;
+  }
+
   final EventBus _eventBus = EventBus();
 
   // 私有构造函数

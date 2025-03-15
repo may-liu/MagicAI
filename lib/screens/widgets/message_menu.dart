@@ -101,7 +101,7 @@ class _MessageMenuState extends State<MessageMenu> {
   }
 
   void _delete() {
-    TopicManager().currentTopic.deleteMessage(widget.index);
+    TopicManager().currentTopic?.deleteMessage(widget.index);
     debugPrint(
       'debug for Delete message: on delete menu: index is ${widget.index} & content is ${widget.message.content}',
     );

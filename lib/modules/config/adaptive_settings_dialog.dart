@@ -21,6 +21,8 @@ class MyApp extends StatelessWidget {
 
 // 修改 HomePage 类定义
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
