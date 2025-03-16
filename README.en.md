@@ -2,19 +2,21 @@
 
 <img src="assets/logo.png" width="120" align="right">
 
-**An open-source AI companion framework for the IoT era**
+**Aspiring to Contribute in the AIoT Era: An Open-Source Agent Framework**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.29-blue?logo=flutter)](https://flutter.dev)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## 🌟 Project Vision
-With the open-sourcing of Deepseek and the imminent proliferation of customized AIoT devices, MagicAI aims to be the foundational framework that empowers everyone to create their own intelligent companions. Built with Flutter for ultimate cross-platform compatibility, this project strives to become the building blocks for next-generation AI interactions.
+## Project Motivation
+The open-sourcing of Deepseek inspired me to reflect: as an individual developer, how could I contribute to the industry in my own way? I’ve always been passionate about the convergence of "AI + IoT," particularly the potential of edge computing. To address potential cross-platform interaction needs in the future, I decided to learn a new technology stack. Between TypeScript and Flutter, I chose the less mainstream but more natively performant Flutter. Over the past month, I’ve been learning the framework while building the foundational architecture. Moving forward, I plan to focus on two goals: creating reusable component libraries and exploring lightweight edge computing implementations. Through this open-source project, I hope to collaborate with the community to explore possibilities in the AIoT era.
+
 
 ## 🚀 Current Status
 **Early Development Phase** (v0.1-alpha)  
-⚠️ Not yet functional - Under active development  
-My goal is to deliver basic AI interaction capabilities within 1-2 weeks.
+⚠️ Not yet usable - Actively under development
+- The goal is to implement basic interaction functionalities within the next 1-2 weeks.
+- Current features are unstable, especially as storage formats are highly likely to change. The project is not yet ready for practical use.
 
 ## ✨ Core Features
 ### 1. AI Agent Manager
@@ -41,7 +43,11 @@ git clone https://github.com/may-liu/MagicAI.git
 flutter pub get
 
 # Run development version
-flutter run -d chrome
+flutter run -d macos
+or
+flutter run -d windows
+or
+flutter run -d apk
 ```
 
 ## 📄 License

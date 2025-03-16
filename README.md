@@ -2,19 +2,22 @@
 
 <img src="assets/logo.png" width="120" align="right">
 
-**面向AIoT时代的开源智能体框架**
+**希望可以在AIoT时代做点什么的开源智能体框架**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.29-blue?logo=flutter)](https://flutter.dev)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## 🌟 项目愿景
-随着Deepseek的开源和定制化AIoT设备的即将普及，MagicAI旨在成为赋能每个人创建专属智能伴侣的基础框架。基于Flutter的跨平台特性，本项目致力于成为新一代AI交互的基础构建模块。
+## 项目初衷
+看到Deepseek 的开源，作为个人开发者考虑能否用自己擅长的方式为行业做点力所能及的事。我一直对 “AI + 物联网” 的融合方向感兴趣，尤其看好边缘计算的潜力。为了应对未来可能遇到的跨平台交互需求，我决定学习一门新的技术栈。在 TypeScript 与 Flutter 之间，我选择了相对小众但性能更贴近原生的 Flutter。过去一个月一边学习框架一边开发，逐步搭建了当前的基础架构。未来计划聚焦两个方向：构建可复用的组件库，并探索轻量级边缘计算的实现方案。希望通过这个开源项目，与大牛们共同探索 AIoT 时代的可能性。
+
 
 ## 🚀 当前状态
 **早期开发阶段** (v0.1-alpha)  
 ⚠️ 尚未可用 - 正在积极开发中  
-当前的期望是可以在未来的1-2周内实现基本的交互功能。
+- 当前的期望是可以在未来的1-2周内实现基本的交互功能。
+- 当前功能尚不稳定，尤其是存储格式极有可能随时调整。
+
 
 ## ✨ 核心特性
 ### 1. 智能体管理器
@@ -41,7 +44,11 @@ git clone https://github.com/may-liu/MagicAI.git
 flutter pub get
 
 # 运行开发版本
-flutter run -d chrome
+flutter run -d macos
+或者
+flutter run -d windows
+或者
+flutter run -d apk
 ```
 
 ## 📄 开源协议

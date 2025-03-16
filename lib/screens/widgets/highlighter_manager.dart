@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,6 +40,15 @@ late final Highlighter _jsonDarkHighlighter;
 class HighlighterManager {
   // 单例实例
   static final HighlighterManager _instance = HighlighterManager._internal();
+
+  // static TextStyle _codeStyle = GoogleFonts.jetBrainsMono(
+  //   fontSize: 14,
+  //   height: 1.3,
+  // );
+  static final TextStyle defaultCodeStyle = GoogleFonts.sourceCodePro(
+    fontSize: 14,
+    height: 1.3,
+  );
 
   final Map<String, Highlighter> _keyEntityMap = {};
   late var _hlTheme;

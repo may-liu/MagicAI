@@ -41,7 +41,7 @@ class _ChatScreenState extends State<ChatScreen>
   final TextEditingController _textController = TextEditingController();
   late SystemConfig config;
   late StreamSubscription _subscription;
-  late String _topicTitle = SystemManager.instance.currentTitle;
+  late final String _topicTitle = SystemManager.instance.currentTitle;
   final FocusNode _focusNode = FocusNode();
 
   // void _initTopics() {
@@ -337,7 +337,7 @@ class _ChatScreenState extends State<ChatScreen>
     } else {
       return BlogPost(
         key: ValueKey(
-          '${SystemManager.instance.currentTitle}${message.startPos}+${index}',
+          '${SystemManager.instance.currentTitle}${message.startPos}+$index',
         ),
         message: message,
         messageIndex: index,

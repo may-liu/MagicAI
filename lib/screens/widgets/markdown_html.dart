@@ -448,7 +448,7 @@ class _CodeBlockWidgetState extends State<CodeBlockWidget> {
             HighlighterManager()
                 .getHighlighter(_normalizeLanguage(widget.language))!
                 .highlight(widget.content),
-            style: GoogleFonts.jetBrainsMono(fontSize: 14, height: 1.3),
+            style: HighlighterManager.defaultCodeStyle,
           ),
         ),
       ),
@@ -849,11 +849,6 @@ class HybridMarkdown extends StatefulWidget {
 
 class _HybridMarkdownState extends State<HybridMarkdown>
     with AutomaticKeepAliveClientMixin {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   List<String> extractTags(String html) {
     dom.Document document = html_parser.parse(html);
     Set<String> tagSet = {};
