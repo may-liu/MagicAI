@@ -847,7 +847,8 @@ class HybridMarkdown extends StatefulWidget {
   State<StatefulWidget> createState() => _HybridMarkdownState();
 }
 
-class _HybridMarkdownState extends State<HybridMarkdown> {
+class _HybridMarkdownState extends State<HybridMarkdown>
+    with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
@@ -992,4 +993,8 @@ class _HybridMarkdownState extends State<HybridMarkdown> {
       blockSyntaxes: const [ThinkElementSyntax()],
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }

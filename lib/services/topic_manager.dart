@@ -33,12 +33,14 @@ class Topic {
   }
 
   Future<void> deleteMessage(int index) async {
-    _lock
+    ChatMessage msg = messages[index];
+    
+    await _lock
         .synchronized(() async {
           debugPrint(
             'debug for Delete message: on Delete Message: messages length:${messages.length} & index is $index',
           );
-          ChatMessage msg = messages[index];
+
           await TopicContext.deleteContext(
             msg.startPos,
             messages.sublist(index),
@@ -46,9 +48,10 @@ class Topic {
           // messages.removeAt(index);
         })
         .then((value) {
-          _eventLock.synchronized(() async {
+          _eventLock.synchronized(() {
             for (var element in _eventNotifiers) {
-              element.onListItemChangedCallback(() => messages.removeAt(index));
+              element.onMessageRemovedCallback(msg, index);
+              // .onListItemChangedCallback(() => messages.removeAt(index));
             }
           });
         });
@@ -65,7 +68,7 @@ class Topic {
             current.content,
           );
           current.startPos = pos.first;
-          _eventLock.synchronized(() async {
+          _eventLock.synchronized(() {
             for (var element in _eventNotifiers) {
               element.onResponseDoneCallback();
             }
@@ -73,17 +76,19 @@ class Topic {
         }
         if (message.isNotEmpty) {
           if (current.messageType == MessageType.UnInitialized) {
-            _eventLock.synchronized(() async {
+            _eventLock.synchronized(() {
               for (var element in _eventNotifiers) {
                 element.onRequestSentCallback();
               }
             });
             current.content = message;
             current.messageType = type;
-            messages.add(current);
-            _eventLock.synchronized(() async {
+
+            _eventLock.synchronized(() {
+              int myIndex = messages.length;
+              messages.add(current);
               for (var element in _eventNotifiers) {
-                element.onResponseReceivingCallback(current);
+                element.onMessageAddedCallback(current, myIndex);
               }
             });
             if (type == MessageType.User) {
@@ -95,11 +100,13 @@ class Topic {
             }
           } else {
             current.content += message;
-            _eventLock.synchronized(() async {
-              for (var element in _eventNotifiers) {
-                element.onResponseReceivingCallback(current);
-              }
-            });
+            for (var element in _eventNotifiers) {
+              element.onMessageUpdatingCallback(current, messages.length - 1);
+            }
+
+            for (var element in _eventNotifiers) {
+              element.onResponseReceivingCallback(current);
+            }
           }
         }
       },
@@ -165,11 +172,12 @@ class Topic {
             messageType: type,
           );
           msg.startPos = element.first;
-          messages.add(msg);
-          _eventLock.synchronized(() async {
-            for (var element in _eventNotifiers) {
-              element.onResponseReceivingCallback(msg);
-            }
+          _eventLock.synchronized(() {
+            // int myIndex = messages.length;
+            messages.add(msg);
+            // for (var element in _eventNotifiers) {
+            //   element.onMessageAddedCallback(msg, myIndex);
+            // }
           });
         }
       }

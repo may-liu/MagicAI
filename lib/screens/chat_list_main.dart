@@ -94,6 +94,10 @@ class _ChatFileListState extends State<ChatFileList> {
   // }
 
   void _handleDoubleTap(FileNode node) async {
+    if (node.isSubDirectory) {
+      SystemManager.instance.doBackToParent();
+    }
+
     if (node.isDirectory) {
       // final currentState = _expansionState[node.path] ?? false;
       SystemManager.instance.doChangeFolder(node.path);
@@ -126,10 +130,19 @@ class _ChatFileListState extends State<ChatFileList> {
     if (mode == RootExpansionMode.hideAndExpand) {
       // 直接渲染根节点的子节点
       var list = _root.children.map((child) => _buildNode(child, 0)).toList();
+      if (SystemManager.instance.needBackToParent()) {
+        list.insert(0, _buildNode(FileNode.subDirectoryNode(), 0));
+      }
+
       return list;
     }
+
+    List<Widget> nodes = [_buildNode(_root, 0)];
+    if (SystemManager.instance.needBackToParent()) {
+      nodes.insert(0, _buildNode(FileNode.subDirectoryNode(), 0));
+    }
     // 正常渲染根节点
-    return [_buildNode(_root, 0)];
+    return nodes;
   }
 
   Widget _buildNode(FileNode node, int depth) {

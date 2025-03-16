@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 enum MessageType { User, AI, Thinking, UnInitialized, End }
@@ -37,6 +36,9 @@ abstract class TopicNotifyCallback {
   void onRequestSentCallback();
   void onListItemChangedCallback(VoidCallback callback);
   void onResponseReceivingCallback(ChatMessage message);
+  void onMessageAddedCallback(ChatMessage message, int index);
+  void onMessageUpdatingCallback(ChatMessage message, int index);
+  void onMessageRemovedCallback(ChatMessage message, int index);
   void onResponseDoneCallback();
   void onMessageTypeChanged(MessageType from, MessageType to);
 }

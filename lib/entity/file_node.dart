@@ -7,11 +7,22 @@ class FileNode {
   List<FileNode> children;
   bool isExpanded;
   bool isLoaded;
+  final bool isSubDirectory;
+
+  static FileNode subDirectoryNode() {
+    return FileNode(
+      name: '...',
+      path: '',
+      isDirectory: true,
+      isSubDirectory: true,
+    );
+  }
 
   FileNode({
     required this.name,
     required this.path,
     required this.isDirectory,
+    this.isSubDirectory = false,
     this.children = const [],
     this.isExpanded = false,
     this.isLoaded = false,

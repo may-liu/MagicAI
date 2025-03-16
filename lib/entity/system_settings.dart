@@ -195,8 +195,8 @@ Future<Map<String, dynamic>> readJsonFile(String fileName) async {
   return {};
 }
 
-Future<SystemConfig> getSystemConfig() async {
-  Map<String, dynamic> jsonBody = await readJsonFile('system.json');
-  SystemConfig.instance.fromJsonBody(jsonBody);
-  return SystemConfig.instance;
-}
+// Future<SystemConfig> getSystemConfig() async {
+//   Map<String, dynamic> jsonBody = await readJsonFile('system.json');
+//   SystemConfig.instance.fromJsonBody(jsonBody);
+//   return SystemConfig.instance;
+// }

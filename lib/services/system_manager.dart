@@ -126,6 +126,11 @@ class SystemManager {
     return index < 0 ? -1 : index;
   }
 
+  void doBackToParent() {
+    var target = Directory(_currentFolder).parent.path;
+    doChangeFolder(target);
+  }
+
   void doChangeFolder(String folder) {
     if (isSubDirectory(folder, _dataLocation)) {
       if (_currentFolder != folder) {
@@ -215,6 +220,10 @@ class SystemManager {
     return result;
   }
 
+  bool needBackToParent() {
+    return isSubDirectory(_currentFolder, _topicLocation.path);
+  }
+
   bool isSubDirectory(String pathA, String pathB) {
     // 规范化路径，处理不同操作系统的路径分隔符和多余的斜杠等
     String normalizedPathA = path.normalize(pathA);
@@ -260,8 +269,8 @@ class SystemManager {
     if (_currentChatingFile.isEmpty) {
       _currentChatingFile = generateFileNameWithTimestampAndRandom();
     }
-    // return path.join(_topicLocation.path, _currentChatingFile);
-    return path.join(_currentFolder, _currentChatingFile);
+    return path.join(_topicLocation.path, _currentChatingFile);
+    // return path.join(_currentFolder, _currentChatingFile);
   }
 
   String get currentTitle {
@@ -283,14 +292,14 @@ class SystemManager {
       _currentChatingFile = relativePath;
 
       Topic t = Topic(currentTitle, filename);
+
       t.loadMessage().then((value) {
         if (value) {
-          TopicManager().addTopic(currentTitle, t);
           _localFileChangedEvent.fire(
             LocalFileChangedEvent(oldTitle, currentTitle, oldTopic, t),
           );
+          TopicManager().addTopic(currentTitle, t);
           TopicManager().removeTpoic(oldTitle);
-
           SystemManager.instance.saveSystemConfig();
         }
       });

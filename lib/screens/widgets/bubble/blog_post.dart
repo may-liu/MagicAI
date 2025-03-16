@@ -5,19 +5,40 @@ import 'package:magicai/screens/widgets/markdown_html.dart';
 import 'package:magicai/screens/widgets/message_menu.dart';
 import 'package:magicai/services/abstract_client.dart';
 
-class BlogPost extends StatelessWidget {
+class BlogPost extends StatefulWidget {
   final ChatMessage message;
   final int messageIndex;
+
+  const BlogPost({
+    super.key,
+    required this.message,
+    required this.messageIndex,
+  });
+
+  @override
+  State<StatefulWidget> createState() => _BlogPostState();
+}
+
+class _BlogPostState extends State<BlogPost> {
+  late ChatMessage _message;
+  late int _messageIndex;
+
+  @override
+  void initState() {
+    _message = widget.message;
+    _messageIndex = widget.messageIndex;
+    super.initState();
+  }
 
   Widget _buildAvatar(BuildContext context) {
     return CircleAvatar(
       radius: 16,
       backgroundColor:
-          message.isUser
+          _message.isUser
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.secondary,
       child: Icon(
-        message.isUser ? Icons.person : Icons.smart_toy,
+        _message.isUser ? Icons.person : Icons.smart_toy,
         size: 18,
         color: Theme.of(context).colorScheme.onPrimary,
       ),
@@ -36,22 +57,19 @@ class BlogPost extends StatelessWidget {
         ),
         SizedBox(width: 8),
         Text(
-          DateFormat('HH:mm:ss').format(message.timestamp),
+          DateFormat('HH:mm:ss').format(_message.timestamp),
           style: Theme.of(context).textTheme.labelSmall,
         ),
       ],
     );
   }
 
-  const BlogPost({
-    super.key,
-    required this.message,
-    required this.messageIndex,
-  });
-
   @override
   Widget build(BuildContext context) {
-    Widget singleChild = HybridMarkdown(content: message.content);
+    Widget singleChild = HybridMarkdown(
+      key: UniqueKey(),
+      content: _message.content,
+    );
 
     return Card(
       margin: const EdgeInsets.all(2),
@@ -60,7 +78,7 @@ class BlogPost extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(context, message.isUser),
+            _buildHeader(context, _message.isUser),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -68,9 +86,9 @@ class BlogPost extends StatelessWidget {
                 // if (!isUser) _buildAvatar(context),
                 Expanded(
                   child: MessageMenu(
-                    index: messageIndex,
-                    message: message,
-                    isUser: message.isUser,
+                    index: _messageIndex,
+                    message: _message,
+                    isUser: _message.isUser,
                     child: singleChild,
                     //HybridMarkdown(content: message.content),
                   ),
