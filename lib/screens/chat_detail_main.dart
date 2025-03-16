@@ -159,10 +159,10 @@ class _ChatScreenState extends State<ChatScreen>
       return event.newTopic!;
     });
 
-    // SystemManager.instance.changeCurrentFile(
-    //   SystemManager.instance.currentFile,
-    //   force: true,
-    // );
+    SystemManager.instance.changeCurrentFile(
+      SystemManager.instance.currentFile,
+      force: true,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();

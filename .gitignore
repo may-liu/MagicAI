@@ -86,7 +86,6 @@ android/.gitignore
 android/build.gradle.kts
 android/gradle.properties
 android/settings.gradle.kts
-android/app/build.gradle.kts
 android/app/src/main/kotlin/com/example/magicai/MainActivity.kt
 android/app/src/main/res/drawable/launch_background.xml
 android/app/src/main/res/drawable-v21/launch_background.xml
