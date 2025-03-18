@@ -14,7 +14,6 @@ import 'package:magicai/screens/widgets/highlighter_manager.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
-import 'package:google_fonts/google_fonts.dart';
 
 // 定义一个 InheritedWidget 来共享文本数据
 class TextInheritedWidget extends InheritedWidget {
@@ -146,7 +145,7 @@ class _ThinkBlockWidgetState extends State<ThinkBlockWidget> {
   @override
   void initState() {
     super.initState();
-    _expanded = false;
+    _expanded = true;
   }
 
   @override
@@ -847,8 +846,7 @@ class HybridMarkdown extends StatefulWidget {
   State<StatefulWidget> createState() => _HybridMarkdownState();
 }
 
-class _HybridMarkdownState extends State<HybridMarkdown>
-    with AutomaticKeepAliveClientMixin {
+class _HybridMarkdownState extends State<HybridMarkdown> {
   List<String> extractTags(String html) {
     dom.Document document = html_parser.parse(html);
     Set<String> tagSet = {};

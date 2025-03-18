@@ -18,6 +18,7 @@
 - 当前的期望是可以在未来的1-2周内实现基本的交互功能。
 - 当前功能尚不稳定，尤其是存储格式极有可能随时调整。
 
+/Users/Yourname/Library/Containers/com.example.magicai/Data/Library/Application Support/com.example.magicai/data.json
 
 ## ✨ 核心特性
 ### 1. 智能体管理器

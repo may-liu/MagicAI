@@ -218,93 +218,112 @@ class OpenaiClient implements GptClient {
 
     HttpClient httpClient = HttpClient();
     final fullText = text.replaceAll('\r\n', '\n');
-    _request = await httpClient.postUrl(_client.second);
-    _request!.headers.set('Content-Type', 'application/json; charset=UTF-8');
-    _request!.headers.set('Authorization', 'Bearer ${_client.first}');
-    // _request!.headers.set('X-TC-Version', '2017-03-12');
-    var msgs = [];
 
-    if (prompt.isNotEmpty) {
-      msgs.add({"role": "system", "content": prompt});
-    }
-    if (last.isNotEmpty) {
-      for (ChatMessage cm
-          in last.length > 20 ? last.sublist(last.length - 20) : last) {
-        if (cm.messageType == MessageType.User) {
-          msgs.add({"role": "user", "content": cm.content});
-        } else if (cm.messageType == MessageType.AI) {
-          msgs.add({"role": "assistant", "content": cm.content});
+    try {
+      httpClient.idleTimeout = Duration(seconds: 30);
+      _request = await httpClient.postUrl(_client.second);
+
+      _request!.headers.set('Content-Type', 'application/json; charset=UTF-8');
+      _request!.headers.set('Authorization', 'Bearer ${_client.first}');
+      // _request!.headers.set('X-TC-Version', '2017-03-12');
+      var msgs = [];
+
+      if (prompt.isNotEmpty) {
+        msgs.add({"role": "system", "content": prompt});
+      }
+      if (last.isNotEmpty) {
+        for (ChatMessage cm
+            in last.length > 20 ? last.sublist(last.length - 20) : last) {
+          if (cm.messageType == MessageType.User) {
+            msgs.add({"role": "user", "content": cm.content});
+          } else if (cm.messageType == MessageType.AI) {
+            msgs.add({"role": "assistant", "content": cm.content});
+          }
         }
       }
-    }
-    msgs.add({"role": "user", "content": fullText});
+      msgs.add({"role": "user", "content": fullText});
 
-    Map<String, dynamic> jsonBody = {
-      'model': SystemManager.instance.currentModel()?.modelId,
-      'messages': msgs,
-      "temperature": _config.temperature,
-      "max_tokens": 16384,
-      'stream': true,
-    };
+      Map<String, dynamic> jsonBody = {
+        'model': SystemManager.instance.currentModel()?.modelId,
+        'messages': msgs,
+        "temperature": _config.temperature,
+        "max_tokens": 16384,
+        'stream': true,
+      };
 
-    final body = json.encode(jsonBody);
+      final body = json.encode(jsonBody);
 
-    debugPrint('begin to send: ${_client.second}\n$body');
-    if (_current_type != MessageType.User) {
-      onChanged(_current_type, MessageType.User);
-      _current_type = MessageType.User;
-    }
-    callback(MessageType.User, fullText);
-    _request!.write(body);
+      debugPrint('begin to send: ${_client.second}\n$body');
+      if (_current_type != MessageType.User) {
+        onChanged(_current_type, MessageType.User);
+        _current_type = MessageType.User;
+      }
+      callback(MessageType.User, "User", fullText);
+      _request!.write(body);
 
-    final response = await _request!.close();
+      final response = await _request!.close();
 
-    _subscription = response
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen((line) {
-          debugPrint('received: $line');
-          if (line.isNotEmpty && line.startsWith('data: ')) {
-            final data = line.substring(6);
-            if (data != '[DONE]') {
-              try {
-                final jsonData = json.decode(data);
-                if (jsonData['choices'] != null &&
-                    jsonData['choices'].isNotEmpty &&
-                    jsonData['choices'][0]['delta'] != null) {
-                  if (jsonData['choices'][0]['delta']['reasoning_content'] !=
-                      null) {
-                    if (_current_type != MessageType.Thinking) {
-                      onChanged(_current_type, MessageType.Thinking);
-                      _current_type = MessageType.Thinking;
+      _subscription = response
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen((line) {
+            debugPrint('received: $line');
+            if (line.isNotEmpty && line.startsWith('data: ')) {
+              final data = line.substring(6);
+              if (data != '[DONE]') {
+                try {
+                  final jsonData = json.decode(data);
+                  final senderName = jsonData['model'];
+                  if (jsonData['choices'] != null &&
+                      jsonData['choices'].isNotEmpty &&
+                      jsonData['choices'][0]['delta'] != null) {
+                    if (jsonData['choices'][0]['delta']['reasoning_content'] !=
+                        null) {
+                      if (_current_type != MessageType.Thinking) {
+                        onChanged(_current_type, MessageType.Thinking);
+                        _current_type = MessageType.Thinking;
+                      }
+                      callback(
+                        MessageType.Thinking,
+                        senderName,
+                        jsonData['choices'][0]['delta']['reasoning_content'],
+                      );
                     }
-                    callback(
-                      MessageType.Thinking,
-                      jsonData['choices'][0]['delta']['reasoning_content'],
-                    );
-                  }
-                  if (jsonData['choices'][0]['delta']['content'] != null) {
-                    if (_current_type != MessageType.AI) {
-                      onChanged(_current_type, MessageType.AI);
-                      _current_type = MessageType.AI;
+                    if (jsonData['choices'][0]['delta']['content'] != null) {
+                      if (_current_type != MessageType.AI) {
+                        onChanged(_current_type, MessageType.AI);
+                        _current_type = MessageType.AI;
+                      }
+                      callback(
+                        MessageType.AI,
+                        senderName,
+                        jsonData['choices'][0]['delta']['content'],
+                      );
                     }
-                    callback(
-                      MessageType.AI,
-                      jsonData['choices'][0]['delta']['content'],
-                    );
                   }
+                } catch (e) {
+                  debugPrint('Error decoding JSON: $e');
                 }
-              } catch (e) {
-                debugPrint('Error decoding JSON: $e');
+              } else {
+                callback(MessageType.End, "User", '');
+                // _subscription?.cancel();
+                // _request?.abort();
               }
-            } else {
-              callback(MessageType.End, '');
-              // _subscription?.cancel();
-              // _request?.abort();
             }
-          }
-        });
-    httpClient.close();
+          });
+      httpClient.close();
+    } catch (e) {
+      if (e is SocketException) {
+        callback(MessageType.SocketError, "SYSTEM", e.message);
+        // 处理网络连接异常
+      } else if (e is HttpException) {
+        callback(MessageType.HttpError, "SYSTEM", e.message);
+        // 处理 HTTP 请求异常
+      } else {
+        callback(MessageType.Error, "SYSTEM", e.toString());
+        // 处理其他未知异常
+      }
+    } finally {}
   }
 
   @override

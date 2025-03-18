@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:magicai/entity/pair.dart';
 import 'package:magicai/services/abstract_client.dart';
@@ -30,29 +31,33 @@ enum TopicTitle { titleUser, titleThinking, titleAI }
 
 class TopicContext {
   static String titleSpliter = "📌✅👉 ";
-  static String titleUser = "📌✅👉 User";
+  static String titleUser = "📌✅👉 ❤️";
   static String titleThinking = "📌✅👉 Thinking";
-  static String titleAI = "📌✅👉 AI";
+  static String titleAI = "📌✅👉 🤖";
+  static String titleTimeSpliter = " ⏰ ";
 
   static Future<Pair<int, int>> appendContext(
     MessageType type,
+    String name,
     String content,
+    DateTime opTime,
   ) async {
     late String prefix;
     switch (type) {
       case MessageType.User:
-        prefix = titleUser;
+        prefix = '$titleUser $name';
         break;
       case MessageType.Thinking:
         prefix = titleThinking;
         break;
       case MessageType.AI:
-        prefix = titleAI;
+        prefix = '$titleAI $name';
         break;
       default:
         assert(true);
     }
-    var c = '\n$prefix\n\n$content\n';
+    String formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss.SSS').format(opTime);
+    var c = '\n$prefix$titleTimeSpliter$formattedTime\n\n$content\n';
     return await appendToFile(c, SystemManager.instance.currentFile);
   }
 
@@ -62,7 +67,9 @@ class TopicContext {
     for (var element in last.sublist(1)) {
       Pair<int, int> pos = await appendContext(
         element.messageType,
+        element.senderId!,
         element.content,
+        element.opTime,
       );
 
       element.startPos = pos.first;

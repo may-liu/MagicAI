@@ -58,6 +58,24 @@ class SwitchConfigItem extends ConfigItem {
   }
 }
 
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const CustomAppBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Text('标题'),
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+}
+
 class NavigationConfigItem extends ConfigItem {
   final Widget childWidget;
 
@@ -70,38 +88,59 @@ class NavigationConfigItem extends ConfigItem {
   });
 
   void navigateTo(BuildContext context, Widget widget) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) {
-          final size = MediaQuery.of(context).size;
-          return Dialog(
-            insetPadding: EdgeInsets.symmetric(horizontal: 24.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: size.height,
-                maxWidth: size.width,
-              ),
-              child: widget,
+        pageBuilder: (_, __, ___) => widget,
+        transitionsBuilder: (context, animation, _, child) {
+          const begin = Offset(1.0, 0.0); // 右侧滑入
+          const end = Offset.zero;
+          return SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: begin,
+                end: end,
+              ).chain(CurveTween(curve: Curves.easeOut)),
             ),
+            child: child,
           );
         },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          if (isIOS) {
-            return _buildIOSSlideTransition(
-              animation,
-              secondaryAnimation,
-              child,
-            );
-          } else {
-            return _buildAndroidFadeTransition(animation, child);
-          }
-        },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 250),
       ),
     );
+
+    // final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    // Navigator.push(
+    //   context,
+    //   PageRouteBuilder(
+    //     pageBuilder: (_, __, ___) {
+    //       final size = MediaQuery.of(context).size;
+    //       return Dialog(
+    //         insetPadding: EdgeInsets.symmetric(horizontal: 24.0),
+    //         child: ConstrainedBox(
+    //           constraints: BoxConstraints(
+    //             maxHeight: size.height,
+    //             maxWidth: size.width,
+    //           ),
+    //           child: widget,
+    //         ),
+    //       );
+    //     },
+    //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+    //       if (isIOS) {
+    //         return _buildIOSSlideTransition(
+    //           animation,
+    //           secondaryAnimation,
+    //           child,
+    //         );
+    //       } else {
+    //         return _buildAndroidFadeTransition(animation, child);
+    //       }
+    //     },
+    //     transitionDuration: const Duration(milliseconds: 300),
+    //   ),
+    // );
   }
 
   Widget _buildIOSSlideTransition(

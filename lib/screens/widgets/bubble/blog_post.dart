@@ -19,7 +19,8 @@ class BlogPost extends StatefulWidget {
   State<StatefulWidget> createState() => _BlogPostState();
 }
 
-class _BlogPostState extends State<BlogPost> {
+class _BlogPostState extends State<BlogPost>
+    with AutomaticKeepAliveClientMixin {
   late ChatMessage _message;
   late int _messageIndex;
 
@@ -45,19 +46,19 @@ class _BlogPostState extends State<BlogPost> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isUser) {
+  Widget _buildHeader(BuildContext context, String userName) {
     return Row(
       children: [
         ...[_buildAvatar(context), const SizedBox(width: 8)],
         Text(
-          isUser ? '您' : 'AI助手',
+          '| $userName |',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         SizedBox(width: 8),
         Text(
-          DateFormat('HH:mm:ss').format(_message.timestamp),
+          DateFormat('HH:mm:ss').format(_message.opTime),
           style: Theme.of(context).textTheme.labelSmall,
         ),
       ],
@@ -66,6 +67,7 @@ class _BlogPostState extends State<BlogPost> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     Widget singleChild = HybridMarkdown(
       key: UniqueKey(),
       content: _message.content,
@@ -78,7 +80,7 @@ class _BlogPostState extends State<BlogPost> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(context, _message.isUser),
+            _buildHeader(context, _message.senderId!),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -100,4 +102,7 @@ class _BlogPostState extends State<BlogPost> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

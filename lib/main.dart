@@ -2,12 +2,15 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:magicai/modules/config/adaptive_settings_dialog.dart';
+import 'package:magicai/modules/config/adaptive_settings_dialog_v2.dart'
+    as settings
+    show showAdaptiveDialog;
 import 'package:magicai/modules/config/config_item.dart';
 import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
 import 'package:magicai/screens/chat_detail_main.dart';
 import 'package:magicai/screens/chat_list_main.dart';
 import 'package:magicai/screens/widgets/config/model.dart';
+import 'package:magicai/screens/widgets/config/prompt.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
 import 'package:magicai/services/environment.dart';
 import 'package:magicai/services/system_manager.dart';
@@ -39,7 +42,7 @@ class MagicAIApp extends StatefulWidget {
 
 class _MagicAIAppState extends State<MagicAIApp> {
   bool _isDarkMode = true;
-  bool _testvalue = false;
+  final bool _testvalue = false;
   late List<ConfigItem> settingsItems;
 
   @override
@@ -54,15 +57,14 @@ class _MagicAIAppState extends State<MagicAIApp> {
       ),
       SectionHeaderItem(title: "模型配置"),
       NavigationConfigItem(
-        title: '隐私设置',
+        title: '模型配置',
         icon: Icons.lock_outline,
         childWidget: ModelListTest(),
       ),
-      SwitchConfigItem(
-        title: "switch 测试",
-        icon: Icons.abc,
-        value: _testvalue,
-        onChanged: (v) => setState(() => _testvalue = v),
+      NavigationConfigItem(
+        title: '提示词配置',
+        icon: Icons.info_outline_rounded,
+        childWidget: PromptListView(),
       ),
       // 添加更多配置项...
     ];
@@ -422,14 +424,14 @@ class SideBar extends StatelessWidget {
             icon: const Icon(Icons.settings),
             tooltip: '系统配置',
             onPressed: () {
-              showSettings(context, settingsItems);
+              settings.showAdaptiveDialog(context, settingsItems);
             },
           ),
           IconButton(
             icon: const Icon(Icons.info),
             tooltip: '关于',
             onPressed: () {
-              showSettings(context, settingsItems);
+              settings.showAdaptiveDialog(context, settingsItems);
             },
           ),
           const SizedBox(height: 24.0),

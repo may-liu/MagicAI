@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:magicai/entity/pair.dart';
 import 'package:magicai/services/abstract_client.dart';
 import 'package:magicai/services/chat_storage.dart';
@@ -34,7 +35,7 @@ class Topic {
 
   Future<void> deleteMessage(int index) async {
     ChatMessage msg = messages[index];
-    
+
     await _lock
         .synchronized(() async {
           debugPrint(
@@ -61,11 +62,13 @@ class Topic {
     client.sendRequest(
       messages,
       text,
-      (type, message) async {
+      (type, name, message) async {
         if (type == MessageType.End) {
           Pair<int, int> pos = await TopicContext.appendContext(
             current.messageType,
+            current.senderId!,
             current.content,
+            current.opTime,
           );
           current.startPos = pos.first;
           _eventLock.synchronized(() {
@@ -82,6 +85,7 @@ class Topic {
               }
             });
             current.content = message;
+            current.senderId = name;
             current.messageType = type;
 
             _eventLock.synchronized(() {
@@ -94,7 +98,9 @@ class Topic {
             if (type == MessageType.User) {
               Pair<int, int> pos = await TopicContext.appendContext(
                 current.messageType,
+                current.senderId!,
                 current.content,
+                current.opTime,
               );
               current.startPos = pos.first;
             }
@@ -157,20 +163,36 @@ class Topic {
             debugPrint('OK');
           }
 
-          if (prefix == TopicContext.titleUser) {
+          var info = prefix.split(TopicContext.titleTimeSpliter);
+
+          assert(info.length == 2);
+
+          String userInfo = info[0];
+          String opTime = info[1];
+
+          String name = '';
+
+          if (userInfo.substring(0, TopicContext.titleUser.length) ==
+              TopicContext.titleUser) {
             type = MessageType.User;
+            name = userInfo.substring(TopicContext.titleUser.length + 1);
           }
-          if (prefix == TopicContext.titleThinking) {
+          if (prefix.substring(0, TopicContext.titleThinking.length) ==
+              TopicContext.titleThinking) {
             type = MessageType.Thinking;
           }
-          if (prefix == TopicContext.titleAI) {
+          if (prefix.substring(0, TopicContext.titleAI.length) ==
+              TopicContext.titleAI) {
             type = MessageType.AI;
+            name = userInfo.substring(TopicContext.titleAI.length + 1);
           }
 
           ChatMessage msg = ChatMessage(
             content: txt.substring(currentPos + 1),
             messageType: type,
           );
+          msg.senderId = name;
+          msg.opTime = DateFormat('yyyy-MM-dd HH:mm:ss.SSS').parse(opTime);
           msg.startPos = element.first;
           _eventLock.synchronized(() {
             // int myIndex = messages.length;

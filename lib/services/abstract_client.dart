@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 
-enum MessageType { User, AI, Thinking, UnInitialized, End }
+enum MessageType {
+  User,
+  AI,
+  Thinking,
+  UnInitialized,
+  End,
+  SocketError,
+  HttpError,
+  Error,
+}
 
 // 消息数据模型
 class ChatMessage {
   String content = '';
   String? senderId = '';
   late int startPos = 0;
+  late DateTime opTime;
   MessageType messageType;
 
   bool get isUser {
     return messageType == MessageType.User ? true : false;
   }
 
-  final DateTime timestamp;
-
-  ChatMessage({
-    required this.content,
-    required this.messageType,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  ChatMessage({required this.content, required this.messageType})
+    : opTime = DateTime.now();
 }
 
-typedef RequestCallback = void Function(MessageType type, String message);
+typedef RequestCallback =
+    void Function(MessageType type, String name, String message);
 typedef RequestSendingCallback = void Function();
 typedef RequestSentCallback = void Function();
 typedef ListItemChangedCallback = void Function(VoidCallback callback);
