@@ -8,7 +8,7 @@ import 'package:magicai/modules/config/adaptive_settings_dialog_v2.dart'
 import 'package:magicai/modules/config/config_item.dart';
 import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
 import 'package:magicai/screens/chat_detail_main.dart';
-import 'package:magicai/screens/chat_list_main.dart';
+import 'package:magicai/screens/chat_list_v2_main.dart';
 import 'package:magicai/screens/widgets/config/model.dart';
 import 'package:magicai/screens/widgets/config/prompt.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
@@ -42,7 +42,6 @@ class MagicAIApp extends StatefulWidget {
 
 class _MagicAIAppState extends State<MagicAIApp> {
   bool _isDarkMode = true;
-  final bool _testvalue = false;
   late List<ConfigItem> settingsItems;
 
   @override
@@ -189,7 +188,7 @@ class _DesktopLayoutState extends State<DesktopLayout> {
           ),
           SizedBox(
             width: _chatListWidth,
-            child: ChatFileList(
+            child: ChatFileListV2(
               onFileSelected: (String filePath) {
                 SystemManager.instance.changeCurrentFile(filePath);
               },
@@ -227,7 +226,7 @@ class StatelessDesktopLayout extends StatelessWidget {
           SideBar(width: 72, settingsItems: settingsItems),
           const VerticalDivider(width: 4),
           Expanded(
-            child: ChatFileList(
+            child: ChatFileListV2(
               onFileSelected: (String filePath) {},
               topicRoot: SystemManager.instance.topicRoot,
             ),
@@ -315,7 +314,7 @@ class _MobileLayoutState extends State<MobileLayout> {
                       : SizedBox.shrink(), // 隐藏时不占空间
             ),
             Expanded(
-              child: ChatFileList(
+              child: ChatFileListV2(
                 // 主内容区域自动填充剩余空间
                 onFileSelected: (filename) {
                   _navigatorKey.currentState?.pushNamed('/chat');

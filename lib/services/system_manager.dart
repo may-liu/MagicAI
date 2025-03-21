@@ -159,6 +159,8 @@ class SystemManager {
 
   Future<void> saveSystemConfig() async {
     await _configLock.synchronized(() async {
+      assert(SystemConfig.instance.modelConfig.isNotEmpty);
+
       var mapping = SystemConfig.instance.toJsonBody();
       Map<String, dynamic> topicFile = {};
       if (_currentChatingFile.isNotEmpty) {
@@ -222,6 +224,25 @@ class SystemManager {
 
   bool needBackToParent() {
     return isSubDirectory(_currentFolder, _topicLocation.path);
+  }
+
+  String? getRelativePath(String childPath, String parentPath) {
+    // 规范化路径
+    String normalizedChildPath = path.normalize(childPath);
+    String normalizedParentPath = path.normalize(parentPath);
+
+    // 判断 childPath 是否是 parentPath 的子目录
+    if (normalizedChildPath.startsWith(normalizedParentPath)) {
+      // 计算相对路径
+      String relative = path.relative(
+        normalizedChildPath,
+        from: normalizedParentPath,
+      );
+      return relative;
+    } else {
+      // 如果不是子目录，返回 null 或者抛出异常，这里选择返回 null
+      return null;
+    }
   }
 
   bool isSubDirectory(String pathA, String pathB) {
@@ -306,21 +327,21 @@ class SystemManager {
     }
   }
 
-  void branchMessage(int index) {
+  Future<String> branchMessage(int index) async {
     Topic? topic = TopicManager().getTopic(currentTitle);
     assert(topic != null);
 
-    TopicContext.branchMessage(topic!, index).then((value) {
-      String relativePath = path.relative(value, from: _topicLocation.path);
-      _currentChatingFile = relativePath;
-      Topic t = Topic(currentTitle, value);
-      t.loadMessage();
-      TopicManager().addTopic(currentTitle, t);
-      SystemManager.instance.saveSystemConfig();
-      _localFileChangedEvent.fire(
-        LocalFileChangedEvent(currentTitle, currentTitle, topic, t),
-      );
-    });
+    var filename = await TopicContext.branchMessage(topic!, index);
+    String relativePath = path.relative(filename, from: _topicLocation.path);
+    _currentChatingFile = relativePath;
+    Topic t = Topic(currentTitle, filename);
+    t.loadMessage();
+    TopicManager().addTopic(currentTitle, t);
+    SystemManager.instance.saveSystemConfig();
+    _localFileChangedEvent.fire(
+      LocalFileChangedEvent(currentTitle, currentTitle, topic, t),
+    );
+    return filename;
   }
 
   void doNewFolder({String folder = ''}) {
@@ -340,8 +361,12 @@ class SystemManager {
       topic = '$topic.md';
     }
 
+    String? subfolder = getRelativePath(_currentFolder, _topicLocation.path);
+    if (subfolder == null) subfolder = '';
+    String newTopic = path.join(subfolder, topic);
+
     var oldfile = _currentChatingFile;
-    _currentChatingFile = topic;
+    _currentChatingFile = newTopic;
 
     var oldTopic = TopicManager().currentTopic;
 

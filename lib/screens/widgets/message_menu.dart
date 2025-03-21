@@ -76,7 +76,7 @@ class _MessageMenuState extends State<MessageMenu> {
         PopupMenuItem(
           onTap: _branch,
           child: const ListTile(
-            leading: Icon(Icons.refresh),
+            leading: Icon(Icons.turn_sharp_left_rounded),
             title: Text('分支'),
           ),
         ),
@@ -97,7 +97,12 @@ class _MessageMenuState extends State<MessageMenu> {
       Clipboard.setData(ClipboardData(text: widget.message.content));
   void _regenerate() => print('Regenerate message: ${widget.message.content}');
   void _branch() {
-    SystemManager.instance.branchMessage(widget.index);
+    SystemManager.instance
+        .branchMessage(widget.index)
+        .then(
+          (value) =>
+              SystemManager.instance.changeCurrentFile(value, force: true),
+        );
   }
 
   void _delete() {
@@ -173,12 +178,19 @@ class _MessageMenuState extends State<MessageMenu> {
             ),
             if (!widget.isUser)
               IconButton(
+                icon: const Icon(Icons.turn_sharp_left_rounded, size: 18),
+                constraints: BoxConstraints(),
+                onPressed: _branch,
+              ),
+            if (!widget.isUser)
+              IconButton(
                 icon: const Icon(Icons.refresh, size: 18),
                 // padding: EdgeInsets.zero,
                 constraints: BoxConstraints(),
 
                 onPressed: _regenerate,
               ),
+
             IconButton(
               icon: const Icon(Icons.delete, size: 18),
               // padding: EdgeInsets.zero,

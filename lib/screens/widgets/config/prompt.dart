@@ -178,6 +178,7 @@ class _PromptListViewState extends State<PromptListView> {
     // final size = MediaQuery.of(context).size;
     // final isDesktop = size.width > 600;
     return Scaffold(
+      appBar: AppBar(title: const Text('提示词配置')),
       backgroundColor: Colors.transparent,
       body: _buildModelConfigList(),
       floatingActionButton: FloatingActionButton(

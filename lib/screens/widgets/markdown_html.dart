@@ -241,7 +241,7 @@ Widget getHtmlView(String contentHtml, BuildContext context) {
         '<hr style="margin: 5px 0; border: none; height: 1px; background-color: grey;">',
   );
 
-  var tags = extractTags(finalHtml);
+  // var tags = extractTags(finalHtml);
 
   return Html(
     data: finalHtml,
