@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:magicai/entity/file_node.dart';
 import 'package:magicai/modules/controls/drag_list_view.dart';
-import 'package:magicai/screens/widgets/file_operation_menu.dart';
 import 'package:magicai/services/system_manager.dart';
 import 'package:path/path.dart' as PathLib;
 
@@ -80,7 +78,6 @@ class ChatFileListV2 extends StatefulWidget {
 
 class _ChatFileListState extends State<ChatFileListV2> {
   final Map<String, bool> _expansionState = {};
-  bool _isInitialized = false;
   late FileNode _root;
   late String _currentRoot;
   late RootExpansionMode mode;
@@ -105,7 +102,6 @@ class _ChatFileListState extends State<ChatFileListV2> {
 
       if (mode == RootExpansionMode.hideAndExpand) {
         _root.loadChildren().then((_) {
-          _isInitialized = true;
           // 隐藏根节点时自动展开其直接子节点
           List<FileNode> childrenNode = List.from(_root.children);
           if (SystemManager.instance.needBackToParent()) {

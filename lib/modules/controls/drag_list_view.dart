@@ -236,10 +236,28 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
     });
   }
 
+  RelativeRect _calculatePosition(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    final Offset buttonPosition = button.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+
+    return RelativeRect.fromLTRB(
+      buttonPosition.dx,
+      buttonPosition.dy - 70, // 调整偏移量
+      buttonPosition.dx + button.size.width,
+      buttonPosition.dy + button.size.height,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('File Drag and Drop')),
+      // appBar: AppBar(title: const Text('File Drag and Drop')),
       body: KeyboardListener(
         focusNode: _focusNode,
         onKeyEvent: (KeyEvent event) {
@@ -346,26 +364,25 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showMenu(
-            context: context,
-            position: RelativeRect.fromLTRB(
-              MediaQuery.of(context).size.width - 100,
-              MediaQuery.of(context).size.height - 100,
-              MediaQuery.of(context).size.width,
-              MediaQuery.of(context).size.height,
-            ),
-            items: [
-              PopupMenuItem<String>(
-                value: 'Add',
-                onTap: _addItem,
-                child: const Text('添加'),
-              ),
-            ],
+      floatingActionButton: Builder(
+        builder: (selfcontext) {
+          return FloatingActionButton(
+            onPressed: () {
+              showMenu(
+                context: selfcontext,
+                position: _calculatePosition(selfcontext),
+                items: [
+                  PopupMenuItem<String>(
+                    value: 'Add',
+                    onTap: _addItem,
+                    child: const Text('添加'),
+                  ),
+                ],
+              );
+            },
+            child: const Icon(Icons.add),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

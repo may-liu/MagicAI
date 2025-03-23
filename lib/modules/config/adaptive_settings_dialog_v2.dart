@@ -260,6 +260,32 @@ class _SlideRightRoute extends PageRouteBuilder {
       );
 }
 
+class SettingsPage extends StatefulWidget {
+  final List<ConfigItem> items;
+  const SettingsPage({super.key, required this.items});
+
+  @override
+  State<StatefulWidget> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late List<ConfigItem> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = widget.items;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('设置')),
+      body: SettingsStateList(items: _items),
+    );
+  }
+}
+
 // 统一弹窗调用方法
 void showAdaptiveDialog(BuildContext context, List<ConfigItem> items) {
   final isDesktop = [
@@ -283,13 +309,7 @@ void showAdaptiveDialog(BuildContext context, List<ConfigItem> items) {
   } else {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder:
-            (_) => Scaffold(
-              appBar: AppBar(title: const Text('设置')),
-              body: AdaptiveSettingsDialog(items: items),
-            ),
-      ),
+      MaterialPageRoute(builder: (context) => SettingsPage(items: items)),
     );
   }
 }

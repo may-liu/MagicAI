@@ -16,6 +16,7 @@ class Topic {
   final String title;
   final Lock _lock = Lock();
   final List<ChatMessage> messages = [];
+  static const List<ChatMessage> defaultMessages = [];
   final Set<TopicNotifyCallback> _eventNotifiers = {};
   final Lock _eventLock = Lock();
   late ChatMessage current = ChatMessage(
@@ -43,6 +44,7 @@ class Topic {
           );
 
           await TopicContext.deleteContext(
+            filePath,
             msg.startPos,
             messages.sublist(index),
           );
@@ -58,13 +60,132 @@ class Topic {
         });
   }
 
-  Future<void> sendMessage(GptClient client, String text) async {
+  Future<void> msgProcedure(
+    MessageType type,
+    String name,
+    String message,
+    ChatMessage responseMsg,
+    int index,
+  ) async {
+    int myIndex = messages.length;
+    final isInsert = index < myIndex - 1;
+    final last = isInsert ? messages[index + 1] : current;
+
+    late Pair<int, int> pos;
+
+    if (type == MessageType.End) {
+      if (isInsert) {
+        pos = await TopicContext.insertContext(
+          filePath,
+          last.startPos,
+          responseMsg,
+          messages.sublist(index),
+        );
+      } else {
+        pos = await TopicContext.appendContext(
+          filePath,
+          responseMsg.messageType,
+          responseMsg.senderId!,
+          responseMsg.content,
+          responseMsg.opTime,
+        );
+      }
+      responseMsg.startPos = pos.first;
+
+      _eventLock.synchronized(() {
+        for (var element in _eventNotifiers) {
+          element.onResponseDoneCallback();
+        }
+      });
+    } else {
+      if (message.isNotEmpty) {
+        if (responseMsg.messageType == MessageType.UnInitialized) {
+          _eventLock.synchronized(() {
+            for (var element in _eventNotifiers) {
+              element.onRequestSentCallback();
+            }
+          });
+          responseMsg.content = message;
+          responseMsg.senderId = name;
+          responseMsg.messageType = type;
+
+          _eventLock.synchronized(() {
+            if (isInsert) {
+              messages.insert(index, responseMsg);
+            } else {
+              messages.add(responseMsg);
+            }
+            for (var element in _eventNotifiers) {
+              element.onMessageAddedCallback(responseMsg, index);
+            }
+          });
+          late Pair<int, int> pos;
+          if (type == MessageType.User) {
+            if (isInsert) {
+              pos = await TopicContext.insertContext(
+                filePath,
+                last.startPos,
+                responseMsg,
+                messages.sublist(index),
+              );
+            } else {
+              pos = await TopicContext.appendContext(
+                filePath,
+                responseMsg.messageType,
+                responseMsg.senderId!,
+                responseMsg.content,
+                responseMsg.opTime,
+              );
+            }
+            responseMsg.startPos = pos.first;
+          }
+        } else {
+          responseMsg.content += message;
+          for (var element in _eventNotifiers) {
+            element.onMessageUpdatingCallback(responseMsg, index);
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> reSendMessage(GptClient client, int msgPosion) async {
+    final msgLens = messages.length;
+    assert(msgPosion < msgLens);
+
+    String text = messages[msgPosion].content;
+    late int nextPos;
+
+    if (msgPosion + 1 < msgLens) {
+      nextPos = msgPosion + 1;
+    } else {
+      nextPos = msgPosion;
+    }
+
+    ChatMessage responseMsg = ChatMessage(
+      content: '',
+      messageType: MessageType.UnInitialized,
+    );
+
+    var subMsgs = messages.sublist(nextPos);
+    await client.sendRequest(subMsgs, text, (type, name, message) async {
+      await msgProcedure(type, name, message, responseMsg, msgPosion);
+    }, (from, to) {});
+    await deleteMessage(msgPosion);
+  }
+
+  Future<void> sendMessage(
+    GptClient client,
+    String text, {
+    List<ChatMessage> msgs = Topic.defaultMessages,
+  }) async {
     client.sendRequest(
-      messages,
+      msgs == Topic.defaultMessages ? messages : msgs,
       text,
       (type, name, message) async {
         if (type == MessageType.End) {
           Pair<int, int> pos = await TopicContext.appendContext(
+            filePath,
             current.messageType,
             current.senderId!,
             current.content,
@@ -97,6 +218,7 @@ class Topic {
             });
             if (type == MessageType.User) {
               Pair<int, int> pos = await TopicContext.appendContext(
+                filePath,
                 current.messageType,
                 current.senderId!,
                 current.content,
@@ -108,10 +230,6 @@ class Topic {
             current.content += message;
             for (var element in _eventNotifiers) {
               element.onMessageUpdatingCallback(current, messages.length - 1);
-            }
-
-            for (var element in _eventNotifiers) {
-              element.onResponseReceivingCallback(current);
             }
           }
         }

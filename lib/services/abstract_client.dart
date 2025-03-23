@@ -28,7 +28,7 @@ class ChatMessage {
 }
 
 typedef RequestCallback =
-    void Function(MessageType type, String name, String message);
+    Future<void> Function(MessageType type, String name, String message);
 typedef RequestSendingCallback = void Function();
 typedef RequestSentCallback = void Function();
 typedef ListItemChangedCallback = void Function(VoidCallback callback);
@@ -41,7 +41,6 @@ abstract class TopicNotifyCallback {
   void onRequestSendingCallback();
   void onRequestSentCallback();
   void onListItemChangedCallback(VoidCallback callback);
-  void onResponseReceivingCallback(ChatMessage message);
   void onMessageAddedCallback(ChatMessage message, int index);
   void onMessageUpdatingCallback(ChatMessage message, int index);
   void onMessageRemovedCallback(ChatMessage message, int index);

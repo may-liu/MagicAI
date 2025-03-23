@@ -478,15 +478,6 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   @override
-  void onResponseReceivingCallback(ChatMessage message) {
-    // if (mounted) {
-    //   setState(() {
-    //     //   _messagestNotifier.value;
-    //   });
-    // }
-  }
-
-  @override
   void onMessageAddedCallback(ChatMessage message, int index) {
     addMessage(message);
   }

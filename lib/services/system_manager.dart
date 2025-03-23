@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:magicai/entity/system_settings.dart';
 import 'package:magicai/services/chat_storage.dart';
 import 'package:magicai/services/file_storage_utils.dart';
+import 'package:magicai/services/openai_client.dart';
 import 'package:magicai/services/topic_manager.dart';
 // ignore: unused_import
 import 'package:path/path.dart' as path;
@@ -327,6 +328,15 @@ class SystemManager {
     }
   }
 
+  Future<void> regenerate(int index) async {
+    Topic? topic = TopicManager().getTopic(currentTitle);
+    assert(topic != null);
+
+    var client = OpenaiClientManager.instance.getInstance(currentModel()!);
+
+    await TopicContext.regenerate(topic!, client!, index);
+  }
+
   Future<String> branchMessage(int index) async {
     Topic? topic = TopicManager().getTopic(currentTitle);
     assert(topic != null);
@@ -362,7 +372,7 @@ class SystemManager {
     }
 
     String? subfolder = getRelativePath(_currentFolder, _topicLocation.path);
-    if (subfolder == null) subfolder = '';
+    subfolder ??= '';
     String newTopic = path.join(subfolder, topic);
 
     var oldfile = _currentChatingFile;

@@ -15,7 +15,7 @@ import '../entity/pair.dart';
 class OpenaiClientManager {
   static final OpenaiClientManager _instance = OpenaiClientManager._internal();
   // 静态方法，用于创建 MyClass 实例
-  OpenaiClient? getInstance(ModelConfig config) {
+  GptClient? getInstance(ModelConfig config) {
     Pair<String, Uri> parseUrl = Pair(config.apiKey, Uri.parse(config.url));
 
     OpenaiClient? c = _makeInstance(parseUrl);
@@ -258,7 +258,7 @@ class OpenaiClient implements GptClient {
         onChanged(_current_type, MessageType.User);
         _current_type = MessageType.User;
       }
-      callback(MessageType.User, "User", fullText);
+      await callback(MessageType.User, "User", fullText);
       _request!.write(body);
 
       final response = await _request!.close();
@@ -266,7 +266,7 @@ class OpenaiClient implements GptClient {
       _subscription = response
           .transform(utf8.decoder)
           .transform(const LineSplitter())
-          .listen((line) {
+          .listen((line) async {
             debugPrint('received: $line');
             if (line.isNotEmpty && line.startsWith('data: ')) {
               final data = line.substring(6);
@@ -283,7 +283,7 @@ class OpenaiClient implements GptClient {
                         onChanged(_current_type, MessageType.Thinking);
                         _current_type = MessageType.Thinking;
                       }
-                      callback(
+                      await callback(
                         MessageType.Thinking,
                         senderName,
                         jsonData['choices'][0]['delta']['reasoning_content'],
@@ -294,7 +294,7 @@ class OpenaiClient implements GptClient {
                         onChanged(_current_type, MessageType.AI);
                         _current_type = MessageType.AI;
                       }
-                      callback(
+                      await callback(
                         MessageType.AI,
                         senderName,
                         jsonData['choices'][0]['delta']['content'],
@@ -305,22 +305,24 @@ class OpenaiClient implements GptClient {
                   debugPrint('Error decoding JSON: $e');
                 }
               } else {
-                callback(MessageType.End, "User", '');
+                await callback(MessageType.End, "User", '');
                 // _subscription?.cancel();
                 // _request?.abort();
               }
+            } else {
+              await callback(MessageType.Error, "SYSTEM", line);
             }
           });
       httpClient.close();
     } catch (e) {
       if (e is SocketException) {
-        callback(MessageType.SocketError, "SYSTEM", e.message);
+        await callback(MessageType.SocketError, "SYSTEM", e.message);
         // 处理网络连接异常
       } else if (e is HttpException) {
-        callback(MessageType.HttpError, "SYSTEM", e.message);
+        await callback(MessageType.HttpError, "SYSTEM", e.message);
         // 处理 HTTP 请求异常
       } else {
-        callback(MessageType.Error, "SYSTEM", e.toString());
+        await callback(MessageType.Error, "SYSTEM", e.toString());
         // 处理其他未知异常
       }
     } finally {}

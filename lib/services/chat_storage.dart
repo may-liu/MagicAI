@@ -37,6 +37,7 @@ class TopicContext {
   static String titleTimeSpliter = " ⏰ ";
 
   static Future<Pair<int, int>> appendContext(
+    String file,
     MessageType type,
     String name,
     String content,
@@ -58,14 +59,29 @@ class TopicContext {
     }
     String formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss.SSS').format(opTime);
     var c = '\n$prefix$titleTimeSpliter$formattedTime\n\n$content\n';
-    return await appendToFile(c, SystemManager.instance.currentFile);
+    return await appendToFile(c, file);
   }
 
-  static deleteContext(int startPos, List<ChatMessage> last) async {
-    String currentFile = SystemManager.instance.currentFile;
-    await truncateFromEnd(currentFile, startPos);
+  static Future<Pair<int, int>> insertContext(
+    String file,
+    int startPos,
+    ChatMessage message,
+    List<ChatMessage> last,
+  ) async {
+    await truncateFromEnd(file, startPos);
+
+    Pair<int, int> pos = await appendContext(
+      file,
+      message.messageType,
+      message.senderId!,
+      message.content,
+      message.opTime,
+    );
+    message.startPos = pos.first;
+
     for (var element in last.sublist(1)) {
       Pair<int, int> pos = await appendContext(
+        file,
         element.messageType,
         element.senderId!,
         element.content,
@@ -73,6 +89,45 @@ class TopicContext {
       );
 
       element.startPos = pos.first;
+    }
+    return pos;
+  }
+
+  static Future<void> deleteContext(
+    String file,
+    int startPos,
+    List<ChatMessage> last,
+  ) async {
+    await truncateFromEnd(file, startPos);
+    for (var element in last.sublist(1)) {
+      Pair<int, int> pos = await appendContext(
+        file,
+        element.messageType,
+        element.senderId!,
+        element.content,
+        element.opTime,
+      );
+
+      element.startPos = pos.first;
+    }
+  }
+
+  static Future<void> regenerate(
+    Topic topic,
+    GptClient client,
+    int index,
+  ) async {
+    assert(index >= 0);
+
+    final msgLen = topic.messages.length;
+
+    if (topic.messages[index].messageType == MessageType.AI) {
+      assert(msgLen > 1);
+      // 如果是AI消息，需要重新生成上一条消息
+      await topic.reSendMessage(client, index - 1);
+    } else if (topic.messages[index].messageType == MessageType.User) {
+      // 如果是用户消息，需要重新生成当前消息
+      await topic.reSendMessage(client, index);
     }
   }
 

@@ -95,7 +95,7 @@ class _MessageMenuState extends State<MessageMenu> {
   // 操作方法
   void _copyMessage() =>
       Clipboard.setData(ClipboardData(text: widget.message.content));
-  void _regenerate() => print('Regenerate message: ${widget.message.content}');
+  void _regenerate() => SystemManager.instance.regenerate(widget.index);
   void _branch() {
     SystemManager.instance
         .branchMessage(widget.index)
@@ -182,14 +182,14 @@ class _MessageMenuState extends State<MessageMenu> {
                 constraints: BoxConstraints(),
                 onPressed: _branch,
               ),
-            if (!widget.isUser)
-              IconButton(
-                icon: const Icon(Icons.refresh, size: 18),
-                // padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
+            // if (!widget.isUser)
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 18),
+              // padding: EdgeInsets.zero,
+              constraints: BoxConstraints(),
 
-                onPressed: _regenerate,
-              ),
+              onPressed: _regenerate,
+            ),
 
             IconButton(
               icon: const Icon(Icons.delete, size: 18),
