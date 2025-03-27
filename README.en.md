@@ -1,6 +1,9 @@
 # MagicAI (English Version)
 
-<img src="assets/logo.png" width="120" align="right">
+<img src="assets/logo.png" width="120">
+
+
+<img src="doc/171743057058_.pic.jpg" alt="Mac UI" width="500" height="300">
 
 **Aspiring to Contribute in the AIoT Era: An Open-Source Agent Framework**
 

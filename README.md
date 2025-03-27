@@ -3,7 +3,7 @@
 <img src="assets/logo.png" width="120">
 
 
-<img src="doc/171743057058_.pic.jpg" alt="图片描述" width="500" height="300">
+<img src="doc/171743057058_.pic.jpg" alt="Mac UI界面" width="500" height="300">
 
 **希望可以在AIoT时代做点什么的开源智能体界面框架**
 
