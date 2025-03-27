@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'package:magicai/screens/ui_dialog.dart' as UIDialog;
 
 abstract class DragableListItem {
   bool isHovering;
@@ -159,10 +160,12 @@ typedef DoubleTapItemCallback = void Function(DragableListItem item);
 
 class MultiFileDragAndDropPage extends StatefulWidget {
   final List<DragableListItem> items;
+  final bool mobileLayout;
   final VoidCallback reloadItemCallback;
   final DoubleTapItemCallback doubleTapItemCallback;
   const MultiFileDragAndDropPage({
     super.key,
+    this.mobileLayout = false,
     required this.items,
     required this.reloadItemCallback,
     required this.doubleTapItemCallback,
@@ -179,12 +182,14 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
   bool isShiftPressed = false;
   final FocusNode _focusNode = FocusNode();
   int? editingIndex;
+  late bool _mobileLayout;
   TextEditingController? _textEditingController;
 
   @override
   void initState() {
     super.initState();
     _items = widget.items;
+    _mobileLayout = widget.mobileLayout;
     // 请求焦点
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
@@ -228,8 +233,13 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
     });
   }
 
+  void _addGroup() {
+    UIDialog.showNewFolderDialog(context);
+  }
+
   void _addItem() {
     debugPrint("添加");
+    UIDialog.showNewFileDialog(context);
     // 可添加实际的添加逻辑，例如添加新的 item 到列表
     setState(() {
       // items.add('Item ${items.length + 1}');
@@ -247,8 +257,8 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
     );
 
     return RelativeRect.fromLTRB(
-      buttonPosition.dx,
-      buttonPosition.dy - 70, // 调整偏移量
+      buttonPosition.dx - 50,
+      buttonPosition.dy - 120, // 调整偏移量
       buttonPosition.dx + button.size.width,
       buttonPosition.dy + button.size.height,
     );
@@ -373,9 +383,14 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
                 position: _calculatePosition(selfcontext),
                 items: [
                   PopupMenuItem<String>(
-                    value: 'Add',
+                    value: 'AddFile',
                     onTap: _addItem,
-                    child: const Text('添加'),
+                    child: const Text('新建聊天'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'AddGroup',
+                    onTap: _addGroup,
+                    child: const Text('新建组'),
                   ),
                 ],
               );
@@ -403,44 +418,35 @@ class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
       childWhenDragging: Container(),
       child: GestureDetector(
         onTap: () {
-          if (isMultiSelectMode || isShiftPressed) {
-            setState(() {
-              if (item.isSelected) {
-                selectedItems.remove(item);
-                item.isSelected = false;
-              } else {
-                selectedItems.add(item);
-                item.isSelected = true;
-              }
-            });
-            // } else if (isShiftPressed && selectedItems.isNotEmpty) {
-            //   int startIndex = _items.indexOf(selectedItems.first);
-            //   int endIndex = index;
-            //   if (startIndex > endIndex) {
-            //     int temp = startIndex;
-            //     startIndex = endIndex;
-            //     endIndex = temp;
-            //   }
-            //   setState(() {
-            //     selectedItems.clear();
-            //     for (int i = startIndex; i <= endIndex; i++) {
-            //       selectedItems.add(_items[i]);
-            //       _items[i].isSelected = true;
-            //     }
-            //   });
+          if (_mobileLayout) {
+            widget.doubleTapItemCallback(item);
+            widget.reloadItemCallback();
+            return;
           } else {
-            bool selected = item.isSelected;
-            setState(() {
-              if (!item.isSelected) {
-                selectedItems = [item];
-              } else {
-                selectedItems.clear();
-              }
-              for (DragableListItem item in _items) {
-                item.isSelected = false;
-              }
-              item.isSelected = !selected;
-            });
+            if (isMultiSelectMode || isShiftPressed) {
+              setState(() {
+                if (item.isSelected) {
+                  selectedItems.remove(item);
+                  item.isSelected = false;
+                } else {
+                  selectedItems.add(item);
+                  item.isSelected = true;
+                }
+              });
+            } else {
+              bool selected = item.isSelected;
+              setState(() {
+                if (!item.isSelected) {
+                  selectedItems = [item];
+                } else {
+                  selectedItems.clear();
+                }
+                for (DragableListItem item in _items) {
+                  item.isSelected = false;
+                }
+                item.isSelected = !selected;
+              });
+            }
           }
         },
         onDoubleTap: () {

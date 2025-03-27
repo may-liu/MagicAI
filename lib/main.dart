@@ -7,6 +7,7 @@ import 'package:magicai/modules/config/adaptive_settings_dialog_v2.dart'
     show showAdaptiveDialog;
 import 'package:magicai/modules/config/config_item.dart';
 import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
+import 'package:magicai/screens/ui_dialog.dart';
 import 'package:magicai/screens/chat_detail_main.dart';
 import 'package:magicai/screens/chat_list_v2_main.dart';
 import 'package:magicai/screens/widgets/config/model.dart';
@@ -14,6 +15,7 @@ import 'package:magicai/screens/widgets/config/prompt.dart';
 import 'package:magicai/screens/widgets/highlighter_manager.dart';
 import 'package:magicai/services/environment.dart';
 import 'package:magicai/services/system_manager.dart';
+import 'package:magicai/services/version.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
@@ -21,6 +23,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemManager.initialize();
   await HighlighterManager.ensureInitialized(true);
+
   if (!EnvironmentUtils.isDesktop) {
     var status = await Permission.storage.request();
     if (status.isGranted) {
@@ -46,6 +49,7 @@ class _MagicAIAppState extends State<MagicAIApp> {
 
   @override
   void initState() {
+    super.initState();
     settingsItems = [
       SectionHeaderItem(title: '外观设置'),
       ThemeConfigItem(
@@ -67,7 +71,8 @@ class _MagicAIAppState extends State<MagicAIApp> {
       ),
       // 添加更多配置项...
     ];
-    super.initState();
+
+    checkForUpdates(context);
   }
 
   @override
@@ -123,7 +128,10 @@ class _AdaptiveHomePageState extends State<AdaptiveHomePage> {
 
     return useDesktopLayout
         ? DesktopLayout(settingsItems: widget.settingsItems)
-        : MobileLayout(settingsItems: widget.settingsItems);
+        : MobileLayout(
+          settingsItems: widget.settingsItems,
+          title: SystemManager.instance.currentTitle,
+        );
   }
 }
 
@@ -244,7 +252,12 @@ class StatelessDesktopLayout extends StatelessWidget {
 
 class MobileLayout extends StatefulWidget {
   final List<ConfigItem> settingsItems;
-  const MobileLayout({super.key, required this.settingsItems});
+  final String title;
+  const MobileLayout({
+    super.key,
+    required this.settingsItems,
+    required this.title,
+  });
 
   @override
   State<MobileLayout> createState() => _MobileLayoutState();
@@ -276,7 +289,7 @@ class _MobileLayoutState extends State<MobileLayout> {
 
   Widget _buildPage(BuildContext context, String? routeName) {
     if (routeName == '/chat') {
-      return chatScreenWrapper(); // 包装Chat页面
+      return chatScreenWrapper(widget.title); // 包装Chat页面
     } else {
       return Scaffold(
         appBar: AppBar(
@@ -316,6 +329,7 @@ class _MobileLayoutState extends State<MobileLayout> {
             Expanded(
               child: ChatFileListV2(
                 // 主内容区域自动填充剩余空间
+                mobileLayout: true,
                 onFileSelected: (filename) {
                   _navigatorKey.currentState?.pushNamed('/chat');
                   SystemManager.instance.changeCurrentFile(filename);
@@ -333,7 +347,7 @@ class _MobileLayoutState extends State<MobileLayout> {
   void _handleSettings() => print("设置菜单弹出");
 
   // 包装Chat页面并处理手势穿透问题
-  Widget chatScreenWrapper() {
+  Widget chatScreenWrapper(String title) {
     return Scaffold(
       // 添加Scaffold包裹以支持AppBar
       appBar: AppBar(
@@ -341,7 +355,7 @@ class _MobileLayoutState extends State<MobileLayout> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => _navigatorKey.currentState?.pop(),
         ),
-        title: Text("当前聊天窗口"),
+        title: Text(title),
         actions: [
           // 自定义操作按钮区域
           IconButton(
@@ -390,32 +404,34 @@ class SideBar extends StatelessWidget {
             icon: const Icon(Icons.message),
             tooltip: '新建聊天',
             onPressed: () {
-              InputDialog.showInputPrompt(
-                context: context,
-                title: '新对话名称',
-                placeholder: '新名称',
-              ).then(
-                (value) =>
-                    (value != null)
-                        ? SystemManager.instance.doNewTopic(topic: value)
-                        : null,
-              );
+              showNewFileDialog(context);
+              // InputDialog.showInputPrompt(
+              //   context: context,
+              //   title: '新对话名称',
+              //   placeholder: '新名称',
+              // ).then(
+              //   (value) =>
+              //       (value != null)
+              //           ? SystemManager.instance.doNewTopic(topic: value)
+              //           : null,
+              // );
             },
           ),
           IconButton(
             icon: const Icon(Icons.folder),
             tooltip: '新建组',
             onPressed: () {
-              InputDialog.showInputPrompt(
-                context: context,
-                title: '新建组',
-                placeholder: '输入组名称',
-              ).then(
-                (value) =>
-                    (value != null)
-                        ? SystemManager.instance.doNewFolder(folder: value)
-                        : null,
-              );
+              showNewFolderDialog(context);
+              // InputDialog.showInputPrompt(
+              //   context: context,
+              //   title: '新建组',
+              //   placeholder: '输入组名称',
+              // ).then(
+              //   (value) =>
+              //       (value != null)
+              //           ? SystemManager.instance.doNewFolder(folder: value)
+              //           : null,
+              // );
             },
           ),
           const Spacer(),

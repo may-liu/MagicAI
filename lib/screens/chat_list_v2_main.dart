@@ -64,10 +64,12 @@ class ChatFileListV2 extends StatefulWidget {
   final RootExpansionMode expansionMode;
   final OnFileSelected onFileSelected;
   final Directory topicRoot;
+  final bool mobileLayout;
 
   const ChatFileListV2({
     super.key,
     this.expansionMode = RootExpansionMode.hideAndExpand,
+    this.mobileLayout = false,
     required this.onFileSelected,
     required this.topicRoot,
   });
@@ -81,10 +83,12 @@ class _ChatFileListState extends State<ChatFileListV2> {
   late FileNode _root;
   late String _currentRoot;
   late RootExpansionMode mode;
+  late bool _mobileLayout;
   final List<MdFileNodeItem> _items = List.empty(growable: true);
   @override
   void initState() {
     super.initState();
+    _mobileLayout = widget.mobileLayout;
     mode = widget.expansionMode;
     _currentRoot = widget.topicRoot.path;
     _initializeRoot(_currentRoot);
@@ -140,20 +144,39 @@ class _ChatFileListState extends State<ChatFileListV2> {
 
     Widget view = MultiFileDragAndDropPage(
       items: _items,
+      mobileLayout: _mobileLayout,
       reloadItemCallback: () => reloadItems(),
       doubleTapItemCallback: (item) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${item.name} 被双击')));
-        if (item is MdFileNodeItem) {
-          if (item.node.isSubDirectory) {
-            SystemManager.instance.doBackToParent();
-          }
-          if (item.node.isDirectory) {
-            // final currentState = _expansionState[node.path] ?? false;
-            SystemManager.instance.doChangeFolder(item.node.path);
-          } else {
-            widget.onFileSelected(item.node.path);
+        // ScaffoldMessenger.of(
+        //   context,
+        // ).showSnackBar(SnackBar(content: Text('${item.name} 被双击')));
+
+        if (SystemManager.instance.currentModel() == null) {
+          // 如果没有配置模型，需要先配置好模型再说
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('请先在配置中配置模型。'),
+              backgroundColor: Colors.red,
+              action: SnackBarAction(
+                label: '确定',
+                textColor: Colors.white,
+                onPressed: () {
+                  // 这里可以添加按钮点击后的处理逻辑
+                },
+              ),
+            ),
+          );
+        } else {
+          if (item is MdFileNodeItem) {
+            if (item.node.isSubDirectory) {
+              SystemManager.instance.doBackToParent();
+            }
+            if (item.node.isDirectory) {
+              // final currentState = _expansionState[node.path] ?? false;
+              SystemManager.instance.doChangeFolder(item.node.path);
+            } else {
+              widget.onFileSelected(item.node.path);
+            }
           }
         }
       },

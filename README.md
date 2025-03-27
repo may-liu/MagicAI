@@ -1,8 +1,11 @@
 # MagicAI (中文版)
 
-<img src="assets/logo.png" width="120" align="right">
+<img src="assets/logo.png" width="120">
 
-**希望可以在AIoT时代做点什么的开源智能体框架**
+
+<img src="doc/171743057058_.pic.jpg" alt="图片描述" width="500" height="300">
+
+**希望可以在AIoT时代做点什么的开源智能体界面框架**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.29-blue?logo=flutter)](https://flutter.dev)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
