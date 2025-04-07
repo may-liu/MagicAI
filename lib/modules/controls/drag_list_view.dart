@@ -178,6 +178,7 @@ class MultiFileDragAndDropPage extends StatefulWidget {
 class _MultiFileDragAndDropPageState extends State<MultiFileDragAndDropPage> {
   late List<DragableListItem> _items;
   List<DragableListItem> selectedItems = [];
+  
   bool isMultiSelectMode = false;
   bool isShiftPressed = false;
   final FocusNode _focusNode = FocusNode();

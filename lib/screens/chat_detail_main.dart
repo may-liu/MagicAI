@@ -229,8 +229,6 @@ class _ChatScreenState extends State<ChatScreen>
   void _handleSubmitted(String text) async {
     final mc = SystemManager.instance.currentModel();
     if (mc != null) {
-      _textController.clear();
-
       setState(() {
         _sendingButtonState = ButtonState.sending;
       });
@@ -457,6 +455,7 @@ class _ChatScreenState extends State<ChatScreen>
   void onRequestSentCallback() {
     if (mounted) {
       setState(() {
+        _textController.clear();
         if (_sendingButtonState != ButtonState.sent) {
           _sendingButtonState = ButtonState.sent;
         }

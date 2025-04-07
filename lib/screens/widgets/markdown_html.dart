@@ -329,7 +329,7 @@ class CodeBlockWidget extends StatefulWidget {
 }
 
 class _CodeBlockWidgetState extends State<CodeBlockWidget> {
-  bool _expanded = false;
+  bool _expanded = true;
   final _scrollController = ScrollController();
 
   @override

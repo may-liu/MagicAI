@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -6,7 +7,7 @@ import 'package:magicai/modules/config/adaptive_settings_dialog_v2.dart'
     as settings
     show showAdaptiveDialog;
 import 'package:magicai/modules/config/config_item.dart';
-import 'package:magicai/modules/controls/input_dialog.dart' as InputDialog;
+import 'package:magicai/modules/controls/async_button.dart';
 import 'package:magicai/screens/ui_dialog.dart';
 import 'package:magicai/screens/chat_detail_main.dart';
 import 'package:magicai/screens/chat_list_v2_main.dart';
@@ -17,6 +18,7 @@ import 'package:magicai/services/environment.dart';
 import 'package:magicai/services/system_manager.dart';
 import 'package:magicai/services/version.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() async {
   // debugPaintLayerBordersEnabled = true;
@@ -69,10 +71,43 @@ class _MagicAIAppState extends State<MagicAIApp> {
         icon: Icons.info_outline_rounded,
         childWidget: PromptListView(),
       ),
+      NavigationConfigItem(
+        title: '文件保存位置',
+        icon: Icons.lock_outline,
+        childWidget: AsyncButton(
+          onPressed: () async {
+            var value = await _pickDirectory();
+
+            setState(() {
+              SystemManager.instance.setDataLocation(value);
+            });
+            SystemManager.instance.saveSystemConfig();
+          },
+          child: Icon(Icons.file_download),
+        ),
+      ),
       // 添加更多配置项...
     ];
 
     checkForUpdates(context);
+  }
+
+  Future<String?> _pickDirectory() async {
+    try {
+      // 使用 file_picker 选择目录
+      String? path = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: '请选择目录',
+      );
+      return path;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('选择失败: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+    return null;
   }
 
   @override
@@ -145,10 +180,26 @@ class DesktopLayout extends StatefulWidget {
 
 class _DesktopLayoutState extends State<DesktopLayout> {
   final double _sidebarWidth = 60;
+  late StreamSubscription _subscription;
   bool _sidebarVisible = true;
   double _chatListWidth = 300;
   void _toggleSidebar() {
     setState(() => _sidebarVisible = !_sidebarVisible);
+  }
+
+  @override
+  void initState() {
+    _subscription = SystemManager.instance.registerEvent((event) {
+      setState(() {});
+      return event.newTopic!;
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    SystemManager.instance.unRegisterEvent(_subscription);
+    super.dispose();
   }
 
   void _updateLayout(double delta) {
@@ -167,7 +218,7 @@ class _DesktopLayoutState extends State<DesktopLayout> {
           icon: Icon(_sidebarVisible ? Icons.menu_open : Icons.menu),
           onPressed: _toggleSidebar,
         ),
-        title: const Text('MagicAI Desktop'),
+        title: Text('MagicAI Desktop - ${SystemManager.instance.currentTitle}'),
       ),
       body: Row(
         children: [

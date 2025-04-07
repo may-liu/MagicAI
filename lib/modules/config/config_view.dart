@@ -84,7 +84,7 @@ class _SettingsPageExampleState extends State<SettingsPageExample> {
         title: '邮箱',
         icon: Icons.email,
         value: 'user@example.com',
-        onChanged: (v) => print('Email changed: $v'),
+        onChanged: (v) => debugPrint('Email changed: $v'),
         validator: (value) {
           if (value?.isEmpty ?? true) return '必填字段';
           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
